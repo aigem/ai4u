@@ -2,10 +2,15 @@
 
 # 模板处理工具
 
-# 引入必要的库
+# 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-source "$ROOT_DIR/lib/logger.sh"
+
+# 引入必要的库
+source "$ROOT_DIR/lib/logger.sh" || {
+    echo "错误: 无法加载 logger.sh"
+    exit 1
+}
 
 # 模板变量替换
 replace_template_vars() {
@@ -21,13 +26,21 @@ replace_template_vars() {
     
     # 创建临时文件
     local temp_file=$(mktemp)
-    cp "$template_file" "$temp_file"
+    cp "$template_file" "$temp_file" || {
+        log_error "复制模板文件失败"
+        rm -f "$temp_file"
+        return 1
+    }
     
     # 替换变量
     for var in "${vars[@]}"; do
         local key="${var%%=*}"
         local value="${var#*=}"
-        sed -i "s|{{${key}}}|${value}|g" "$temp_file"
+        sed -i "s|{{${key}}}|${value}|g" "$temp_file" || {
+            log_error "替换变量失败: $key"
+            rm -f "$temp_file"
+            return 1
+        }
     done
     
     # 检查是否还有未替换的变量
@@ -37,7 +50,12 @@ replace_template_vars() {
     fi
     
     # 移动到目标位置
-    mv "$temp_file" "$output_file"
+    mv "$temp_file" "$output_file" || {
+        log_error "移动文件失败: $output_file"
+        rm -f "$temp_file"
+        return 1
+    }
+    
     return 0
 }
 
@@ -47,6 +65,8 @@ generate_app_skeleton() {
     local target_dir="$2"
     local template_dir="$ROOT_DIR/templates/app_template"
     
+    log_info "生成应用骨架: $app_name -> $target_dir"
+    
     # 检查模板目录
     if [ ! -d "$template_dir" ]; then
         log_error "模板目录不存在: $template_dir"
@@ -54,7 +74,10 @@ generate_app_skeleton() {
     fi
     
     # 创建应用目录结构
-    mkdir -p "$target_dir"/{config,src,data,logs}
+    mkdir -p "$target_dir"/{config,src,data,logs} || {
+        log_error "创建目录结构失败"
+        return 1
+    }
     
     # 复制并处理模板文件
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
@@ -66,12 +89,22 @@ generate_app_skeleton() {
     )
     
     # 处理安装脚本
-    replace_template_vars "$template_dir/install.sh" "$target_dir/install.sh" "${vars[@]}" || return 1
-    chmod +x "$target_dir/install.sh"
+    local install_template="$template_dir/install.sh"
+    local install_script="$target_dir/install.sh"
+    replace_template_vars "$install_template" "$install_script" "${vars[@]}" || {
+        log_error "生成安装脚本失败"
+        return 1
+    }
+    chmod +x "$install_script"
     
     # 处理配置文件
-    replace_template_vars "$ROOT_DIR/templates/config_template.sh" "$target_dir/config/config.sh" "${vars[@]}" || return 1
-    chmod +x "$target_dir/config/config.sh"
+    local config_template="$ROOT_DIR/templates/config_template.sh"
+    local config_script="$target_dir/config/config.sh"
+    replace_template_vars "$config_template" "$config_script" "${vars[@]}" || {
+        log_error "生成配置文件失败"
+        return 1
+    }
+    chmod +x "$config_script"
     
     # 创建说明文件
     cat > "$target_dir/README.md" << EOF
@@ -101,19 +134,7 @@ $USER
 $timestamp
 EOF
     
-    # 创建版本文件
-    echo "1.0.0" > "$target_dir/VERSION"
-    
-    # 创建更新日志
-    cat > "$target_dir/CHANGELOG.md" << EOF
-# 更新日志
-
-## [1.0.0] - $timestamp
-### 新增
-- 初始版本
-EOF
-    
-    log_info "应用骨架生成完成: $target_dir"
+    log_info "应用骨架生成完成"
     return 0
 }
 
