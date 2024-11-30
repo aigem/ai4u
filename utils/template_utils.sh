@@ -69,6 +69,7 @@ create_app_structure() {
     local app_dir="$2"
     
     log_info "创建应用目录结构..."
+    log_info "应用目录: $app_dir"
     
     # 创建必要的子目录
     mkdir -p "$app_dir"/{config,data,logs} || {
@@ -88,18 +89,28 @@ create_app_structure() {
         log_error "复制安装脚本失败"
         return 1
     }
+    log_info "创建安装脚本: $app_dir/install.sh"
     
     # 生成配置文件
     replace_template_vars "$TEMPLATE_DIR/config_template.sh" "$app_dir/config/config.sh" "${template_vars[@]}" || {
         log_error "生成配置文件失败"
         return 1
     }
+    log_info "创建配置文件: $app_dir/config/config.sh"
     
     # 设置执行权限
     chmod +x "$app_dir/install.sh" || {
         log_error "设置执行权限失败"
         return 1
     }
+    
+    log_info "创建的目录和文件:"
+    log_info "  - 应用根目录: $app_dir"
+    log_info "  - 配置目录: $app_dir/config"
+    log_info "  - 数据目录: $app_dir/data"
+    log_info "  - 日志目录: $app_dir/logs"
+    log_info "  - 安装脚本: $app_dir/install.sh"
+    log_info "  - 配置文件: $app_dir/config/config.sh"
     
     log_info "应用目录结构创建成功"
     return 0
