@@ -79,7 +79,7 @@ init_aitools() {
     if [ ! -f "$SCRIPT_DIR/templates/config_template.sh" ]; then
         log_error "缺少配置文件模板"
         return 1
-    }
+    fi
     
     log_info "初始化完成"
     return 0

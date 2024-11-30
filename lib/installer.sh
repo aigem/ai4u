@@ -218,3 +218,34 @@ parallel_install() {
 
 # 初始化安装器
 init_installer
+
+install_app() {
+    local app_name="$1"
+    
+    # 检查安装目录权限
+    if [ ! -w "$BASE_INSTALL_DIR" ]; then
+        # 尝试创建目录
+        mkdir -p "$BASE_INSTALL_DIR" || {
+            log_error "无法创建安装目录: $BASE_INSTALL_DIR"
+            return 1
+        }
+    fi
+    
+    # 检查数据目录权限
+    if [ ! -w "$BASE_DATA_DIR" ]; then
+        mkdir -p "$BASE_DATA_DIR" || {
+            log_error "无法创建数据目录: $BASE_DATA_DIR"
+            return 1
+        }
+    fi
+    
+    # 检查缓存目录权限
+    if [ ! -w "$BASE_CACHE_DIR" ]; then
+        mkdir -p "$BASE_CACHE_DIR" || {
+            log_error "无法创建缓存目录: $BASE_CACHE_DIR"
+            return 1
+        }
+    fi
+    
+    return 0
+}

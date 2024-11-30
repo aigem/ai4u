@@ -7,11 +7,11 @@
 APP_NAME="{{APP_NAME}}"
 APP_VERSION="{{APP_VERSION}}"
 
-# 安装配置
-INSTALL_DIR="$HOME/.local/share/aitools/{{APP_NAME}}"
-DATA_DIR="$HOME/.local/share/aitools/{{APP_NAME}}/data"
-CACHE_DIR="$HOME/.cache/aitools/{{APP_NAME}}"
-LOG_DIR="$HOME/.local/share/aitools/{{APP_NAME}}/logs"
+# 应用配置继承全局设置
+INSTALL_DIR="${BASE_INSTALL_DIR}/${APP_NAME}"
+DATA_DIR="${BASE_DATA_DIR}/${APP_NAME}"
+CACHE_DIR="${BASE_CACHE_DIR}/${APP_NAME}"
+LOG_DIR="${BASE_LOG_DIR}/${APP_NAME}"
 
 # 依赖配置
 DEPENDENCIES=(
