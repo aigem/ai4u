@@ -7,9 +7,9 @@ check_whiptail() {
     if ! command -v whiptail >/dev/null 2>&1; then
         echo "正在安装 whiptail..."
         if command -v apt-get >/dev/null 2>&1; then
-            sudo apt-get update && sudo apt-get install -y whiptail
+            apt-get update && apt-get install -y whiptail
         elif command -v yum >/dev/null 2>&1; then
-            sudo yum install -y newt
+            yum install -y newt
         else
             echo "无法安装 whiptail，将使用基础命令行界面"
             return 1

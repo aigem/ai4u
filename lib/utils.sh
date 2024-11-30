@@ -192,9 +192,9 @@ install_system_package() {
     
     if [[ "$OS" == "linux" ]]; then
         if command -v apt-get &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y "$package"
+            apt-get update && apt-get install -y "$package"
         elif command -v yum &> /dev/null; then
-            sudo yum install -y "$package"
+            yum install -y "$package"
         else
             echo "Error: Unsupported package manager"
             return 1
