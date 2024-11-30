@@ -3,19 +3,32 @@
 # UI 组件库
 
 # 设置字符编码
-export LANG=zh_CN.UTF-8
-export LC_ALL=zh_CN.UTF-8
-export LANGUAGE=zh_CN.UTF-8
+setup_locale() {
+    if ! locale -a | grep -i "zh_CN.utf8" > /dev/null; then
+        if command -v apt-get >/dev/null 2>&1; then
+            DEBIAN_FRONTEND=noninteractive apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y locales
+            echo "zh_CN.UTF-8 UTF-8" >> /etc/locale.gen
+            locale-gen
+        elif command -v yum >/dev/null 2>&1; then
+            yum install -y langpacks-zh_CN glibc-common
+            localedef -c -f UTF-8 -i zh_CN zh_CN.UTF-8
+        fi
+    fi
+    
+    export LANG=zh_CN.UTF-8
+    export LC_ALL=zh_CN.UTF-8
+    export LANGUAGE=zh_CN.UTF-8
+}
 
 # 检查是否有 whiptail，如果没有尝试安装
 check_whiptail() {
     if ! command -v whiptail >/dev/null 2>&1; then
         echo "正在安装 whiptail..."
         if command -v apt-get >/dev/null 2>&1; then
-            DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y whiptail locales
-            locale-gen zh_CN.UTF-8
+            DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y whiptail
         elif command -v yum >/dev/null 2>&1; then
-            yum install -y newt langpacks-zh_CN
+            yum install -y newt
         else
             echo "无法安装 whiptail，将使用基础命令行界面"
             return 1
@@ -23,6 +36,15 @@ check_whiptail() {
     fi
     return 0
 }
+
+# 初始化 UI 环境
+setup_ui_env() {
+    setup_locale
+    check_whiptail
+}
+
+# 在脚本开始时调用初始化函数
+setup_ui_env
 
 # UI 后备方案
 show_message_fallback() {
@@ -64,13 +86,24 @@ show_message() {
 
 show_menu() {
     local title="$1"
-    shift
+    local message="$2"
+    shift 2
     local options=("$@")
     
     if check_whiptail; then
-        whiptail --title "$title" --menu "请选择一个选项:" 20 60 10 "${options[@]}" 3>&1 1>&2 2>&3
+        whiptail --title "$title" --menu "$message" 20 70 10 "${options[@]}" 3>&1 1>&2 2>&3
     else
-        show_menu_fallback "$title" "${options[@]}"
+        echo "=== $title ==="
+        echo "$message"
+        echo "=============="
+        local i=1
+        for ((i=0; i<${#options[@]}; i+=2)); do
+            echo "$((i/2+1)). ${options[i]} - ${options[i+1]}"
+        done
+        read -p "请选择 (1-$((${#options[@]}/2))): " choice
+        if [ -n "$choice" ] && [ "$choice" -ge 1 ] && [ "$choice" -le $((${#options[@]}/2)) ]; then
+            echo "${options[$(((choice-1)*2))]}"
+        fi
     fi
 }
 

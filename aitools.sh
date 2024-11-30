@@ -64,11 +64,11 @@ list_apps() {
     done < <(find "$apps_dir" -mindepth 1 -maxdepth 1 -type d)
     
     if [ ${#available_apps[@]} -eq 0 ]; then
-        show_message "提示" "目前没有可用的应用。\n\n您可以使用 'create-app' 命令创建新应用。"
+        show_message "提示" "目前没有可用的应用。\n\n您可以使用 'create-app' 命令创建新应用。\n\n操作提示：\n - 使用方向键选择选项\n - 按 Enter 键确认\n - 按 Tab 键切换按钮"
         return 0
     fi
     
-    show_menu "可用的 AI 工具" "${available_apps[@]}"
+    show_menu "可用的 AI 工具" "使用方向键选择应用，Enter 键确认，Tab 键切换按钮" "${available_apps[@]}"
 }
 
 # 获取应用描述
