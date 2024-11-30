@@ -2,14 +2,20 @@
 
 # UI 组件库
 
+# 设置字符编码
+export LANG=zh_CN.UTF-8
+export LC_ALL=zh_CN.UTF-8
+export LANGUAGE=zh_CN.UTF-8
+
 # 检查是否有 whiptail，如果没有尝试安装
 check_whiptail() {
     if ! command -v whiptail >/dev/null 2>&1; then
         echo "正在安装 whiptail..."
         if command -v apt-get >/dev/null 2>&1; then
-            apt-get update && apt-get install -y whiptail
+            DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y whiptail locales
+            locale-gen zh_CN.UTF-8
         elif command -v yum >/dev/null 2>&1; then
-            yum install -y newt
+            yum install -y newt langpacks-zh_CN
         else
             echo "无法安装 whiptail，将使用基础命令行界面"
             return 1

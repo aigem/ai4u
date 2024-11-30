@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# 设置字符编码
+export LANG=zh_CN.UTF-8
+export LC_ALL=zh_CN.UTF-8
+export LANGUAGE=zh_CN.UTF-8
+
 # AI Tools 安装管理系统主入口脚本
 
 # 引入必要的库
