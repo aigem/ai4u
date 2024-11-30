@@ -153,7 +153,9 @@ create_app() {
     }
     
     # 创建setup目录（如果不存在）
-    mkdir -p "$SCRIPT_DIR/setup"
+    if [ ! -d "$SCRIPT_DIR/setup" ]; then
+        mkdir -p setup
+    fi
     
     # 创建入口脚本
     local setup_script="$SCRIPT_DIR/setup/${app_name}_setup.sh"
