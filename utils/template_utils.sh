@@ -26,7 +26,7 @@ replace_template_vars() {
     if [ ! -f "$template_file" ]; then
         log_error "模板文件不存在: $template_file"
         return 1
-    }
+    fi
     
     # 创建临时文件
     local temp_file=$(mktemp)
@@ -74,7 +74,7 @@ create_app_structure() {
     if [ ! -d "$APP_TEMPLATE_DIR" ]; then
         log_error "应用模板目录不存在: $APP_TEMPLATE_DIR"
         return 1
-    }
+    fi
     
     # 创建应用目录（如果不存在）
     if [ ! -d "$app_dir" ]; then
@@ -138,7 +138,7 @@ validate_template() {
     if [ ! -f "$template_file" ]; then
         log_error "模板文件不存在: $template_file"
         return 1
-    }
+    fi
     
     # 检查语法错误
     bash -n "$template_file" || {

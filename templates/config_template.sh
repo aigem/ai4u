@@ -1,37 +1,49 @@
 #!/bin/bash
 
-# 配置文件模板生成器
+# {{APP_NAME}} 配置文件
+# 版本: {{APP_VERSION}}
+# 创建时间: {{TIMESTAMP}}
 
-generate_config() {
-    local app_name="$1"
-    local install_dir="$2"
-    local version="$3"
+# 应用基本信息
+APP_NAME="{{APP_NAME}}"
+APP_VERSION="{{APP_VERSION}}"
+
+# 安装目录
+INSTALL_DIR="/opt/$APP_NAME"
+DATA_DIR="/var/lib/$APP_NAME"
+CACHE_DIR="/var/cache/$APP_NAME"
+LOG_DIR="/var/log/$APP_NAME"
+
+# 系统依赖
+DEPENDENCIES=(
+    "curl"
+    "git"
+    "python3"
+    "python3-pip"
+)
+
+# Python包依赖
+PYTHON_PACKAGES=(
+    "numpy>=1.20.0"
+    "pandas>=1.3.0"
+    "requests>=2.26.0"
+)
+
+# 应用配置
+APP_PORT=8080
+APP_HOST="localhost"
+APP_LOG_LEVEL="INFO"
+
+# 检查系统要求
+check_system_requirements() {
+    # 检查Python版本
+    python3 --version >/dev/null 2>&1 || return 1
     
-    cat << EOF
-# $app_name 配置文件
-# 由安装脚本自动生成
-
-# 基本配置
-APP_NAME="$app_name"
-APP_VERSION="$version"
-INSTALL_DIR="$install_dir"
-
-# 目录配置
-DATA_DIR="\${INSTALL_DIR}/data"
-CONFIG_DIR="\${INSTALL_DIR}/config"
-LOG_DIR="\${INSTALL_DIR}/logs"
-
-# 运行时配置
-PORT="8080"         # 默认端口
-DEBUG_MODE="false"  # 调试模式
-
-# 日志配置
-LOG_LEVEL="info"    # 日志级别：debug, info, warn, error
-
-# 自定义配置
-# 在此处添加应用特定的配置项
-EOF
+    # 检查pip
+    python3 -m pip --version >/dev/null 2>&1 || return 1
+    
+    # 检查git
+    git --version >/dev/null 2>&1 || return 1
+    
+    return 0
 }
-
-# 使用示例
-# generate_config "myapp" "/opt/myapp" "1.0.0" > config.sh

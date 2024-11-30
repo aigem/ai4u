@@ -1,70 +1,75 @@
 #!/bin/bash
 
-# 安装入口脚本模板
+# {{APP_NAME}} 安装入口脚本
+# 版本: {{APP_VERSION}}
+# 创建时间: {{TIMESTAMP}}
 
 # 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+APP_DIR="$SCRIPT_DIR/../apps/{{APP_NAME}}"
 
 # 引入必要的库
-source "$ROOT_DIR/lib/logger.sh"
-source "$ROOT_DIR/lib/error_handler.sh"
-source "$ROOT_DIR/lib/utils.sh"
-source "$ROOT_DIR/lib/ui.sh"
-source "$ROOT_DIR/lib/installer.sh"
+source "$SCRIPT_DIR/../lib/logger.sh" || {
+    echo "错误: 无法加载日志模块"
+    exit 1
+}
+source "$SCRIPT_DIR/../lib/utils.sh" || {
+    log_error "无法加载工具模块"
+    exit 1
+}
+source "$SCRIPT_DIR/../lib/error_handler.sh" || {
+    log_error "无法加载错误处理模块"
+    exit 1
+}
 
-# 应用信息
-APP_NAME="{{APP_NAME}}"
-APP_VERSION="{{APP_VERSION}}"
-INSTALL_DIR="$ROOT_DIR/apps/$APP_NAME"
+# 检查应用目录是否存在
+if [ ! -d "$APP_DIR" ]; then
+    log_error "应用目录不存在: $APP_DIR"
+    exit 1
+fi
 
-# 显示欢迎信息
-show_welcome() {
-    show_message "欢迎" "欢迎安装 $APP_NAME v$APP_VERSION"
+# 加载应用配置
+source "$APP_DIR/config.sh" || {
+    log_error "加载应用配置失败"
+    exit 1
 }
 
 # 检查系统要求
-check_requirements() {
-    log_info "检查系统要求..."
-    check_system_requirements || return 1
-    return 0
+check_system_requirements || {
+    log_error "系统要求检查失败"
+    exit 1
 }
 
-# 获取用户配置
-get_user_config() {
-    log_info "获取用户配置..."
-    
-    # 在这里添加获取用户配置的逻辑
-    # 例如：安装路径、端口号等
-    
-    return 0
+# 创建必要的目录
+mkdir -p "$INSTALL_DIR" "$DATA_DIR" "$CACHE_DIR" "$LOG_DIR" || {
+    log_error "创建目录失败"
+    exit 1
 }
 
-# 执行安装
-do_install() {
-    log_info "开始安装 $APP_NAME..."
-    
-    # 调用应用的安装脚本
-    bash "$INSTALL_DIR/install.sh" || return 1
-    
-    return 0
+# 安装系统依赖
+log_info "安装系统依赖..."
+for dep in "${DEPENDENCIES[@]}"; do
+    install_system_package "$dep" || {
+        log_error "安装系统依赖失败: $dep"
+        exit 1
+    }
+done
+
+# 安装Python包依赖
+log_info "安装Python包依赖..."
+for pkg in "${PYTHON_PACKAGES[@]}"; do
+    install_python_package "$pkg" || {
+        log_error "安装Python包失败: $pkg"
+        exit 1
+    }
+done
+
+# 运行应用安装脚本
+log_info "运行应用安装脚本..."
+"$APP_DIR/install.sh" || {
+    log_error "应用安装失败"
+    exit 1
 }
 
-# 显示完成信息
-show_completion() {
-    show_message "安装完成" "$APP_NAME 安装已完成！\n\n请查看 README.md 了解使用方法。"
-}
-
-# 主函数
-main() {
-    show_welcome || return 1
-    check_requirements || return 1
-    get_user_config || return 1
-    do_install || return 1
-    show_completion || return 1
-    
-    return 0
-}
-
-# 启动安装
-main "$@"
+log_info "{{APP_NAME}} 安装完成"
+exit 0
