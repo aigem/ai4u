@@ -1,117 +1,184 @@
 #!/bin/bash
 
-# UI 组件库 - 使用 whiptail 实现现代化的 TUI 界面
+# UI 组件库
 
-# 检查是否安装了 whiptail
+# 检查是否有 whiptail，如果没有尝试安装
 check_whiptail() {
-    if ! command -v whiptail &> /dev/null; then
-        echo "Error: whiptail is not installed. Please install it first."
-        return 1
+    if ! command -v whiptail >/dev/null 2>&1; then
+        echo "正在安装 whiptail..."
+        if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y whiptail
+        elif command -v yum >/dev/null 2>&1; then
+            sudo yum install -y newt
+        else
+            echo "无法安装 whiptail，将使用基础命令行界面"
+            return 1
+        fi
     fi
+    return 0
 }
 
-# 获取终端尺寸
-get_terminal_size() {
-    local height width
-    height=$(tput lines)
-    width=$(tput cols)
-    echo "$height $width"
+# UI 后备方案
+show_message_fallback() {
+    local title="$1"
+    local message="$2"
+    echo "=== $title ==="
+    echo "$message"
+    echo "=============="
 }
 
-# 显示消息框
+show_menu_fallback() {
+    local title="$1"
+    shift
+    local options=("$@")
+    
+    echo "=== $title ==="
+    local i=1
+    for opt in "${options[@]}"; do
+        echo "$i) $opt"
+        ((i++))
+    done
+    echo "=============="
+    
+    read -p "请选择 (1-$((i-1))): " choice
+    return "$choice"
+}
+
+# UI 函数
 show_message() {
     local title="$1"
     local message="$2"
-    local height width
-    read height width <<< $(get_terminal_size)
-    whiptail --title "$title" --msgbox "$message" $((height/3)) $((width/2))
+    
+    if check_whiptail; then
+        whiptail --title "$title" --msgbox "$message" 10 60
+    else
+        show_message_fallback "$title" "$message"
+    fi
 }
 
-# 显示是/否对话框
+show_menu() {
+    local title="$1"
+    shift
+    local options=("$@")
+    
+    if check_whiptail; then
+        whiptail --title "$title" --menu "请选择一个选项:" 20 60 10 "${options[@]}" 3>&1 1>&2 2>&3
+    else
+        show_menu_fallback "$title" "${options[@]}"
+    fi
+}
+
 show_yesno() {
     local title="$1"
     local message="$2"
-    local height width
-    read height width <<< $(get_terminal_size)
-    whiptail --title "$title" --yesno "$message" $((height/3)) $((width/2))
+    
+    if check_whiptail; then
+        whiptail --title "$title" --yesno "$message" 10 60
+    else
+        read -p "$message (y/n): " choice
+        case $choice in
+            y|Y) return 0 ;;
+            n|N) return 1 ;;
+            *) return 1 ;;
+        esac
+    fi
 }
 
-# 显示输入框
 show_input() {
     local title="$1"
     local message="$2"
     local default="$3"
-    local height width
-    read height width <<< $(get_terminal_size)
-    whiptail --title "$title" --inputbox "$message" $((height/3)) $((width/2)) "$default" 3>&1 1>&2 2>&3
+    
+    if check_whiptail; then
+        whiptail --title "$title" --inputbox "$message" 10 60 "$default" 3>&1 1>&2 2>&3
+    else
+        read -p "$message: " input
+        echo "$input"
+    fi
 }
 
-# 显示密码输入框
 show_password() {
     local title="$1"
     local message="$2"
-    local height width
-    read height width <<< $(get_terminal_size)
-    whiptail --title "$title" --passwordbox "$message" $((height/3)) $((width/2)) 3>&1 1>&2 2>&3
+    
+    if check_whiptail; then
+        whiptail --title "$title" --passwordbox "$message" 10 60 3>&1 1>&2 2>&3
+    else
+        read -s -p "$message: " password
+        echo "$password"
+    fi
 }
 
-# 显示进度条
 show_progress() {
     local title="$1"
     local message="$2"
     local percent="$3"
-    local height width
-    read height width <<< $(get_terminal_size)
-    echo "$percent" | whiptail --title "$title" --gauge "$message" $((height/3)) $((width/2)) 0
+    
+    if check_whiptail; then
+        echo "$percent" | whiptail --title "$title" --gauge "$message" 10 60 0
+    else
+        echo "$message ($percent%)"
+    fi
 }
 
-# 显示选择菜单
-show_menu() {
-    local title="$1"
-    local message="$2"
-    shift 2
-    local options=("$@")
-    local height width
-    read height width <<< $(get_terminal_size)
-    whiptail --title "$title" --menu "$message" $((height/2)) $((width/2)) $((height/3)) "${options[@]}" 3>&1 1>&2 2>&3
-}
-
-# 显示多选框
 show_checklist() {
     local title="$1"
     local message="$2"
     shift 2
     local options=("$@")
-    local height width
-    read height width <<< $(get_terminal_size)
-    whiptail --title "$title" --checklist "$message" $((height/2)) $((width/2)) $((height/3)) "${options[@]}" 3>&1 1>&2 2>&3
+    
+    if check_whiptail; then
+        whiptail --title "$title" --checklist "$message" 20 60 10 "${options[@]}" 3>&1 1>&2 2>&3
+    else
+        local i=1
+        for opt in "${options[@]}"; do
+            echo "$i) $opt"
+            ((i++))
+        done
+        read -p "请选择 (空格分隔): " choices
+        for choice in $choices; do
+            echo "${options[$choice-1]}"
+        done
+    fi
 }
 
-# 显示单选框
 show_radiolist() {
     local title="$1"
     local message="$2"
     shift 2
     local options=("$@")
-    local height width
-    read height width <<< $(get_terminal_size)
-    whiptail --title "$title" --radiolist "$message" $((height/2)) $((width/2)) $((height/3)) "${options[@]}" 3>&1 1>&2 2>&3
+    
+    if check_whiptail; then
+        whiptail --title "$title" --radiolist "$message" 20 60 10 "${options[@]}" 3>&1 1>&2 2>&3
+    else
+        local i=1
+        for opt in "${options[@]}"; do
+            echo "$i) $opt"
+            ((i++))
+        done
+        read -p "请选择 (1-$((i-1))): " choice
+        echo "${options[$choice-1]}"
+    fi
 }
 
-# 显示文本信息框
 show_textbox() {
     local title="$1"
     local file="$2"
-    local height width
-    read height width <<< $(get_terminal_size)
-    whiptail --title "$title" --textbox "$file" $((height*2/3)) $((width*2/3))
+    
+    if check_whiptail; then
+        whiptail --title "$title" --textbox "$file" 20 60
+    else
+        cat "$file"
+    fi
 }
 
-# 显示实时日志窗口
 show_tail_log() {
     local title="$1"
     local log_file="$2"
-    local height width
-    read height width <<< $(get_terminal_size)
-    tail -f "$log_file" | whiptail --title "$title" --scrolltext --textbox /dev/stdin $((height*2/3)) $((width*2/3))
+    
+    if check_whiptail; then
+        tail -f "$log_file" | whiptail --title "$title" --scrolltext --textbox /dev/stdin 20 60
+    else
+        tail -f "$log_file"
+    fi
 }

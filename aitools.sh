@@ -17,56 +17,53 @@ show_help() {
     cat << EOF
 AI Tools 安装管理系统 v$VERSION
 
-用法: $(basename "$0") [选项] [命令] [参数]
+用法: $(basename "$0") <命令> [参数]
 
-命令:
-    list                    列出可用的应用
-    install <app>           安装指定的应用
-    create-app <name>       创建新的应用模板
-    update <app>            更新指定的应用
-    remove <app>           删除指定的应用
-    status [app]           显示应用状态
-    help                   显示此帮助信息
-
-选项:
-    -v, --version          显示版本信息
-    -h, --help            显示帮助信息
-    -d, --debug           启用调试模式
-    -q, --quiet           静默模式
-    --no-color            禁用彩色输出
+可用命令:
+  list                 列出可用的 AI 工具
+  install <app>        安装指定的 AI 工具
+  remove <app>         删除指定的 AI 工具
+  update <app>         更新指定的 AI 工具
+  status <app>         查看指定 AI 工具的状态
+  create-app <name>    创建新的 AI 工具模板
+  help                 显示此帮助信息
 
 示例:
-    $0 list               # 列出所有可用应用
-    $0 install comfyui    # 安装ComfyUI
-    $0 create-app myapp   # 创建新应用
-
-更多信息请访问: https://github.com/yourusername/aitools
+  $(basename "$0") list
+  $(basename "$0") install comfyui
+  $(basename "$0") create-app myapp
 EOF
 }
 
 # 列出可用的应用
 list_apps() {
-    log_info "正在扫描可用应用..."
-    
     local apps_dir="$SCRIPT_DIR/apps"
-    local setup_dir="$SCRIPT_DIR/setup"
     local available_apps=()
     
-    # 扫描应用目录
-    for app_dir in "$apps_dir"/*; do
-        if [ -d "$app_dir" ]; then
+    # 检查应用目录是否存在
+    if [ ! -d "$apps_dir" ]; then
+        show_message "错误" "应用目录不存在"
+        return 1
+    }
+    
+    # 获取所有应用
+    while IFS= read -r app_dir; do
+        if [ -f "$app_dir/install.sh" ]; then
             local app_name=$(basename "$app_dir")
-            available_apps+=("$app_name" "$(get_app_description "$app_name")" "OFF")
+            local description=""
+            if [ -f "$app_dir/README.md" ]; then
+                description=$(head -n 1 "$app_dir/README.md" | sed 's/^#\s*//')
+            fi
+            available_apps+=("$app_name" "$description")
         fi
-    done
+    done < <(find "$apps_dir" -mindepth 1 -maxdepth 1 -type d)
     
     if [ ${#available_apps[@]} -eq 0 ]; then
-        show_message "可用应用" "当前没有可用的应用。"
+        show_message "提示" "目前没有可用的应用。\n\n您可以使用 'create-app' 命令创建新应用。"
         return 0
     fi
     
-    # 显示应用列表
-    show_checklist "可用应用" "选择要安装的应用：" "${available_apps[@]}"
+    show_menu "可用的 AI 工具" "${available_apps[@]}"
 }
 
 # 获取应用描述
@@ -227,69 +224,36 @@ show_status() {
 
 # 主函数
 main() {
-    # 解析命令行参数
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            -h|--help)
-                show_help
-                return 0
-                ;;
-            -v|--version)
-                echo "AI Tools v$VERSION"
-                return 0
-                ;;
-            -d|--debug)
-                set_log_level "debug"
-                shift
-                ;;
-            -q|--quiet)
-                set_log_level "error"
-                shift
-                ;;
-            --no-color)
-                # TODO: 实现禁用彩色输出
-                shift
-                ;;
-            list)
-                list_apps
-                return $?
-                ;;
-            install)
-                shift
-                install_app "$1"
-                return $?
-                ;;
-            create-app)
-                shift
-                create_app "$1"
-                return $?
-                ;;
-            update)
-                shift
-                update_app "$1"
-                return $?
-                ;;
-            remove)
-                shift
-                remove_app "$1"
-                return $?
-                ;;
-            status)
-                shift
-                show_status "$1"
-                return $?
-                ;;
-            *)
-                echo "未知选项: $1"
-                show_help
-                return 1
-                ;;
-        esac
-    done
+    local command="$1"
+    shift || true
     
-    # 如果没有参数，显示帮助信息
-    show_help
-    return 0
+    case "$command" in
+        "list"|"")
+            list_apps
+            ;;
+        "install")
+            install_app "$@"
+            ;;
+        "remove")
+            remove_app "$@"
+            ;;
+        "update")
+            update_app "$@"
+            ;;
+        "status")
+            show_status "$@"
+            ;;
+        "create-app")
+            create_app "$@"
+            ;;
+        "help"|"-h"|"--help")
+            show_help
+            ;;
+        *)
+            show_message "错误" "未知命令: $command\n\n运行 '$(basename "$0") help' 获取帮助。"
+            return 1
+            ;;
+    esac
 }
 
 # 启动程序
