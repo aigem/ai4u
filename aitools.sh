@@ -152,6 +152,9 @@ create_app() {
         return 1
     }
     
+    # 创建setup目录（如果不存在）
+    mkdir -p "$SCRIPT_DIR/setup"
+    
     # 创建入口脚本
     local setup_script="$SCRIPT_DIR/setup/${app_name}_setup.sh"
     local vars=(
@@ -159,13 +162,15 @@ create_app() {
         "APP_VERSION=1.0.0"
         "TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')"
     )
+    
+    # 使用模板工具生成入口脚本
     replace_template_vars "$SCRIPT_DIR/templates/setup_template.sh" "$setup_script" "${vars[@]}" || {
         log_error "生成入口脚本失败"
         return 1
     }
-    chmod +x "$setup_script" || return 1
+    chmod +x "$setup_script"
     
-    show_message "成功" "应用 '$app_name' 创建完成"
+    show_message "成功" "应用 '$app_name' 创建完成\n\n入口脚本位置：$setup_script"
     return 0
 }
 
@@ -189,6 +194,7 @@ update_app() {
 remove_app() {
     local app_name="$1"
     local app_dir="$SCRIPT_DIR/apps/$app_name"
+    local setup_script="$SCRIPT_DIR/setup/${app_name}_setup.sh"
     
     # 检查应用是否存在
     if [ ! -d "$app_dir" ]; then
@@ -197,9 +203,22 @@ remove_app() {
     fi
     
     # 确认删除
-    if show_yesno "确认" "确定要删除应用 '$app_name' 吗？"; then
-        rm -rf "$app_dir" || return 1
-        show_message "成功" "应用 '$app_name' 已删除"
+    if show_yesno "确认" "确定要删除应用 '$app_name' 吗？\n这将同时删除:\n1. 应用目录\n2. 安装入口脚本"; then
+        # 删除应用目录
+        rm -rf "$app_dir" || {
+            show_message "错误" "删除应用目录失败"
+            return 1
+        }
+        
+        # 删除安装入口脚本
+        if [ -f "$setup_script" ]; then
+            rm -f "$setup_script" || {
+                show_message "警告" "应用目录已删除，但删除安装入口脚本失败"
+                return 1
+            }
+        fi
+        
+        show_message "成功" "应用 '$app_name' 已完全删除"
     fi
     
     return 0
