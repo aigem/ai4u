@@ -1,29 +1,23 @@
 #!/bin/bash
 
-# 设置字符编码
-export LANG=zh_CN.UTF-8
-export LC_ALL=zh_CN.UTF-8
-export LANGUAGE=zh_CN.UTF-8
-
-# AI Tools 安装管理系统主入口脚本
-
-# 引入必要的库
+# 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$SCRIPT_DIR/lib"
 
 # 引入必要的库
-source "$SCRIPT_DIR/lib/logger.sh" || {
+source "$LIB_DIR/logger.sh" || {
     echo "错误: 无法加载日志模块"
     exit 1
 }
-source "$SCRIPT_DIR/lib/error_handler.sh" || {
-    log_error "无法加载错误处理模块"
-    exit 1
-}
-source "$SCRIPT_DIR/lib/utils.sh" || {
+source "$LIB_DIR/utils.sh" || {
     log_error "无法加载工具模块"
     exit 1
 }
-source "$SCRIPT_DIR/lib/ui.sh" || {
+source "$LIB_DIR/error_handler.sh" || {
+    log_error "无法加载错误处理模块"
+    exit 1
+}
+source "$LIB_DIR/ui.sh" || {
     log_error "无法加载界面模块"
     exit 1
 }

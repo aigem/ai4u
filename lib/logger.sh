@@ -25,22 +25,23 @@ LOG_LEVEL_ERROR=3
 # 当前日志级别
 CURRENT_LOG_LEVEL=$LOG_LEVEL_INFO
 
-# 日志颜色
-COLOR_DEBUG="\033[36m"  # 青色
-COLOR_INFO="\033[32m"   # 绿色
-COLOR_WARN="\033[33m"   # 黄色
-COLOR_ERROR="\033[31m"  # 红色
-COLOR_RESET="\033[0m"   # 重置
-
 # 日志格式化
 _log() {
     local level="$1"
-    local color="$2"
-    local message="$3"
+    local message="$2"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     
+    # 根据日志级别设置颜色
+    local color=""
+    case "$level" in
+        "DEBUG") color="\033[36m" ;; # 青色
+        "INFO")  color="\033[32m" ;; # 绿色
+        "WARN")  color="\033[33m" ;; # 黄色
+        "ERROR") color="\033[31m" ;; # 红色
+    esac
+    
     # 输出到控制台（带颜色）
-    echo -e "[$timestamp] [${color}${level}${COLOR_RESET}] $message"
+    echo -e "[$timestamp] [${color}${level}\033[0m] $message"
     
     # 输出到文件（不带颜色）
     echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
@@ -49,28 +50,28 @@ _log() {
 # 调试日志
 log_debug() {
     if [ $CURRENT_LOG_LEVEL -le $LOG_LEVEL_DEBUG ]; then
-        _log "DEBUG" "$COLOR_DEBUG" "$1"
+        _log "DEBUG" "$1"
     fi
 }
 
 # 信息日志
 log_info() {
     if [ $CURRENT_LOG_LEVEL -le $LOG_LEVEL_INFO ]; then
-        _log "INFO" "$COLOR_INFO" "$1"
+        _log "INFO" "$1"
     fi
 }
 
 # 警告日志
 log_warn() {
     if [ $CURRENT_LOG_LEVEL -le $LOG_LEVEL_WARN ]; then
-        _log "WARN" "$COLOR_WARN" "$1"
+        _log "WARN" "$1"
     fi
 }
 
 # 错误日志
 log_error() {
     if [ $CURRENT_LOG_LEVEL -le $LOG_LEVEL_ERROR ]; then
-        _log "ERROR" "$COLOR_ERROR" "$1"
+        _log "ERROR" "$1"
     fi
 }
 
