@@ -2,6 +2,23 @@
 
 # 通用工具库
 
+# 获取脚本所在目录的绝对路径
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# 日志函数
+log_info() {
+    echo -e "\033[32mINFO\033[0m $1"
+}
+
+log_warn() {
+    echo -e "\033[33mWARN\033[0m $1"
+}
+
+log_error() {
+    echo -e "\033[31mERROR\033[0m $1"
+}
+
 # 检查系统要求
 check_system_requirements() {
     # 检查操作系统
@@ -17,7 +34,7 @@ check_system_requirements() {
     local required_commands=("curl" "wget" "git" "python3" "pip3")
     for cmd in "${required_commands[@]}"; do
         if ! command -v "$cmd" &> /dev/null; then
-            echo "Error: Required command '$cmd' not found"
+            log_error "必需的命令 '$cmd' 未找到"
             return 1
         fi
     done
@@ -25,7 +42,7 @@ check_system_requirements() {
     # 检查Python版本
     local python_version=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
     if [[ "$(echo "$python_version 3.8" | awk '{if ($1 >= $2) print 1; else print 0;}')" == "0" ]]; then
-        echo "Error: Python version must be >= 3.8 (current: $python_version)"
+        log_error "Python版本必须 >= 3.8 (当前: $python_version)"
         return 1
     fi
     
@@ -37,7 +54,7 @@ ensure_directory() {
     local dir="$1"
     if [ ! -d "$dir" ]; then
         mkdir -p "$dir" || {
-            echo "Error: Failed to create directory: $dir"
+            log_error "创建目录失败: $dir"
             return 1
         }
     fi
@@ -49,11 +66,13 @@ download_file() {
     local output="$2"
     
     if command -v curl &> /dev/null; then
-        curl -L -o "$output" "$url"
+        log_info "使用 curl 下载: $url"
+        curl -sSL "$url" -o "$output"
     elif command -v wget &> /dev/null; then
-        wget -O "$output" "$url"
+        log_info "使用 wget 下载: $url"
+        wget -q "$url" -O "$output"
     else
-        echo "Error: Neither curl nor wget is available"
+        log_error "未找到下载工具 (curl 或 wget)"
         return 1
     fi
 }
@@ -61,63 +80,75 @@ download_file() {
 # 检查端口是否可用
 check_port_available() {
     local port="$1"
-    if ! command -v nc &> /dev/null; then
-        return 0  # 如果没有nc命令，假设端口可用
-    fi
-    
-    nc -z localhost "$port" &> /dev/null
-    if [ $? -eq 0 ]; then
-        echo "Error: Port $port is already in use"
-        return 1
+    if command -v nc &> /dev/null; then
+        nc -z localhost "$port" &> /dev/null
+        if [ $? -eq 0 ]; then
+            log_error "端口 $port 已被占用"
+            return 1
+        fi
+    elif command -v lsof &> /dev/null; then
+        if lsof -i :"$port" &> /dev/null; then
+            log_error "端口 $port 已被占用"
+            return 1
+        fi
+    else
+        log_warn "无法检查端口状态 (需要 nc 或 lsof)"
+        return 0
     fi
     return 0
 }
 
 # 获取可用端口
 get_available_port() {
-    local start_port="$1"
+    local start_port="${1:-8000}"
     local port="$start_port"
     
     while ! check_port_available "$port"; do
         ((port++))
     done
+    
     echo "$port"
 }
 
 # 检查磁盘空间
 check_disk_space() {
-    local required_space="$1"  # 以MB为单位
-    local install_path="$2"
+    local required_mb="$1"
+    local path="${2:-/}"
     
-    local available_space
+    # 获取可用空间（MB）
+    local available_mb
     if [[ "$OS" == "mac" ]]; then
-        available_space=$(df -m "$install_path" | awk 'NR==2 {print $4}')
+        available_mb=$(df -m "$path" | tail -1 | awk '{print $4}')
     else
-        available_space=$(df -m "$install_path" | awk 'NR==2 {print $4}')
+        available_mb=$(df -m "$path" | tail -1 | awk '{print $4}')
     fi
     
-    if [ "$available_space" -lt "$required_space" ]; then
-        echo "Error: Not enough disk space. Required: ${required_space}MB, Available: ${available_space}MB"
+    if [ "$available_mb" -lt "$required_mb" ]; then
+        log_error "磁盘空间不足。需要: ${required_mb}MB, 可用: ${available_mb}MB"
         return 1
     fi
+    
     return 0
 }
 
 # 检查内存
 check_memory() {
-    local required_mem="$1"  # 以MB为单位
+    local required_mb="$1"
+    local available_mb
     
-    local total_mem
-    if [[ "$OS" == "mac" ]]; then
-        total_mem=$(($(sysctl -n hw.memsize) / 1024 / 1024))
+    if [[ "$OS" == "linux" ]]; then
+        available_mb=$(free -m | awk '/^Mem:/{print $7}')
+    elif [[ "$OS" == "mac" ]]; then
+        available_mb=$(vm_stat | awk '/free/ {free=$3} /speculative/ {spec=$3} END {print (free+spec)*4096/1048576}')
     else
-        total_mem=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024))
+        available_mb=$(wmic OS get FreePhysicalMemory | awk 'NR==2{print $1/1024}')
     fi
     
-    if [ "$total_mem" -lt "$required_mem" ]; then
-        echo "Error: Not enough memory. Required: ${required_mem}MB, Available: ${total_mem}MB"
+    if [ "$available_mb" -lt "$required_mb" ]; then
+        log_error "内存不足。需要: ${required_mb}MB, 可用: ${available_mb}MB"
         return 1
     fi
+    
     return 0
 }
 
@@ -130,18 +161,27 @@ install_python_package() {
         package="$package==$version"
     fi
     
-    pip3 install --no-cache-dir "$package"
+    log_info "安装 Python 包: $package"
+    pip3 install "$package" || {
+        log_error "安装 Python 包失败: $package"
+        return 1
+    }
 }
 
 # 检查Git仓库
 check_git_repo() {
-    local repo_url="$1"
-    local branch="${2:-main}"
+    local repo_path="$1"
     
-    if ! git ls-remote --exit-code "$repo_url" "refs/heads/$branch" &> /dev/null; then
-        echo "Error: Git repository or branch not found: $repo_url#$branch"
+    if [ ! -d "$repo_path/.git" ]; then
+        log_error "不是有效的 Git 仓库: $repo_path"
         return 1
     fi
+    
+    if ! git -C "$repo_path" rev-parse --is-inside-work-tree &> /dev/null; then
+        log_error "Git 仓库已损坏: $repo_path"
+        return 1
+    fi
+    
     return 0
 }
 
@@ -149,8 +189,9 @@ check_git_repo() {
 clone_git_repo() {
     local repo_url="$1"
     local target_dir="$2"
-    local branch="${3:-main}"
+    local branch="${3:-master}"
     
+    log_info "克隆仓库: $repo_url -> $target_dir (分支: $branch)"
     git clone -b "$branch" "$repo_url" "$target_dir"
 }
 
@@ -163,12 +204,20 @@ generate_random_string() {
 # 验证URL
 validate_url() {
     local url="$1"
-    if curl --output /dev/null --silent --head --fail "$url"; then
-        return 0
+    local timeout="${2:-5}"
+    
+    if command -v curl &> /dev/null; then
+        if ! curl --output /dev/null --silent --head --fail --max-time "$timeout" "$url"; then
+            log_error "无效的 URL: $url"
+            return 1
+        fi
     else
-        echo "Error: Invalid URL: $url"
-        return 1
+        if ! wget --spider --quiet --timeout="$timeout" "$url"; then
+            log_error "无效的 URL: $url"
+            return 1
+        fi
     fi
+    return 0
 }
 
 # 检查进程是否运行
@@ -179,34 +228,54 @@ check_process_running() {
 
 # 获取CPU核心数
 get_cpu_cores() {
-    if [[ "$OS" == "mac" ]]; then
-        sysctl -n hw.ncpu
+    local cores
+    
+    if [[ "$OS" == "linux" ]]; then
+        cores=$(nproc)
+    elif [[ "$OS" == "mac" ]]; then
+        cores=$(sysctl -n hw.ncpu)
     else
-        nproc
+        cores=$(wmic cpu get NumberOfCores | awk 'NR==2')
     fi
+    
+    echo "${cores:-1}"
 }
 
 # 检查并安装系统包
 install_system_package() {
     local package="$1"
+    local package_manager
     
-    if [[ "$OS" == "linux" ]]; then
-        if command -v apt-get &> /dev/null; then
-            apt-get update && apt-get install -y "$package"
-        elif command -v yum &> /dev/null; then
-            yum install -y "$package"
-        else
-            echo "Error: Unsupported package manager"
-            return 1
-        fi
-    elif [[ "$OS" == "mac" ]]; then
-        if ! command -v brew &> /dev/null; then
-            echo "Error: Homebrew not installed"
-            return 1
-        fi
-        brew install "$package"
+    # 检测包管理器
+    if command -v apt-get &> /dev/null; then
+        package_manager="apt"
+    elif command -v yum &> /dev/null; then
+        package_manager="yum"
+    elif command -v brew &> /dev/null; then
+        package_manager="brew"
     else
-        echo "Error: Unsupported operating system"
+        log_error "未找到支持的包管理器"
         return 1
     fi
+    
+    # 安装包
+    log_info "使用 $package_manager 安装 $package"
+    case "$package_manager" in
+        apt)
+            sudo apt-get update && sudo apt-get install -y "$package"
+            ;;
+        yum)
+            sudo yum install -y "$package"
+            ;;
+        brew)
+            brew install "$package"
+            ;;
+    esac
+    
+    if [ $? -ne 0 ]; then
+        log_error "安装包失败: $package"
+        return 1
+    fi
+    
+    return 0
 }
