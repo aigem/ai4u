@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# 引入日志模块
-source "$(dirname "${BASH_SOURCE[0]}")/logger.sh"
-
 # 错误代码定义
 declare -A ERROR_CODES=(
     ["SUCCESS"]=0
@@ -19,34 +16,36 @@ declare -a ERROR_STACK=()
 
 # 初始化错误处理
 init_error_handler() {
-    set -o errexit  # 遇到错误时退出
-    set -o pipefail # 管道中的错误也会导致退出
-    trap 'error_trap ${LINENO} $?' ERR
+    # 设置错误捕获
+    trap error_trap ERR
+    # 清空错误栈
+    ERROR_STACK=()
 }
 
 # 错误捕获函数
 error_trap() {
+    local err_code=$?
     local line_no=$1
-    local error_code=$2
-    local error_msg="Error on line $line_no (Exit code: $error_code)"
     
-    log_error "$error_msg"
-    ERROR_STACK+=("$error_msg")
+    # 记录错误
+    push_error "错误发生在第 $line_no 行，错误代码: $err_code"
+    return $err_code
 }
 
 # 推送错误到错误栈
 push_error() {
     local error_msg="$1"
     ERROR_STACK+=("$error_msg")
-    log_error "$error_msg"
+    echo "$error_msg" >&2
 }
 
 # 获取最后一个错误
 get_last_error() {
-    local stack_size=${#ERROR_STACK[@]}
-    if [ $stack_size -gt 0 ]; then
-        echo "${ERROR_STACK[$stack_size-1]}"
+    if [ ${#ERROR_STACK[@]} -gt 0 ]; then
+        echo "${ERROR_STACK[-1]}"
+        return 0
     fi
+    return 1
 }
 
 # 清空错误栈
@@ -62,9 +61,11 @@ has_errors() {
 # 打印所有错误
 print_errors() {
     if has_errors; then
-        echo "Encountered the following errors:"
+        echo "错误列表:"
+        local i=1
         for error in "${ERROR_STACK[@]}"; do
-            echo " - $error"
+            echo "$i. $error"
+            ((i++))
         done
         return 1
     fi
@@ -73,16 +74,16 @@ print_errors() {
 
 # 错误恢复函数
 rollback_changes() {
-    local component="$1"
-    log_warn "Rolling back changes for component: $component"
-    # 在这里实现具体的回滚逻辑
-    return 0
+    if has_errors; then
+        echo "正在回滚更改..."
+        # 在这里添加回滚逻辑
+    fi
 }
 
 # 安全执行命令
 safe_execute() {
     local cmd="$1"
-    local error_msg="${2:-Command execution failed}"
+    local error_msg="${2:-执行命令失败: $cmd}"
     
     if ! eval "$cmd"; then
         push_error "$error_msg"

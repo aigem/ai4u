@@ -9,10 +9,22 @@ export LANGUAGE=zh_CN.UTF-8
 
 # 引入必要的库
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/lib/logger.sh"
-source "$SCRIPT_DIR/lib/error_handler.sh"
-source "$SCRIPT_DIR/lib/utils.sh"
-source "$SCRIPT_DIR/lib/ui.sh"
+source "$SCRIPT_DIR/lib/logger.sh" || {
+    echo "错误: 无法加载日志模块"
+    exit 1
+}
+source "$SCRIPT_DIR/lib/utils.sh" || {
+    log_error "无法加载工具模块"
+    exit 1
+}
+source "$SCRIPT_DIR/lib/error_handler.sh" || {
+    log_error "无法加载错误处理模块"
+    exit 1
+}
+source "$SCRIPT_DIR/lib/ui.sh" || {
+    log_error "无法加载界面模块"
+    exit 1
+}
 
 # 版本信息
 VERSION="1.0.0"
