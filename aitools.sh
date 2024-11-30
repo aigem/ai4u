@@ -44,7 +44,7 @@ list_apps() {
     if [ ! -d "$apps_dir" ]; then
         show_message "错误" "应用目录不存在"
         return 1
-    }
+    fi
     
     # 获取所有应用
     while IFS= read -r app_dir; do
