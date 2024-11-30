@@ -149,15 +149,13 @@ show_password() {
 }
 
 show_progress() {
-    local title="$1"
-    local message="$2"
-    local percent="$3"
+    local current=$1
+    local total=$2
+    local width=50
+    local percentage=$((current * 100 / total))
+    local completed=$((width * current / total))
     
-    if check_whiptail; then
-        echo "$percent" | whiptail --title "$title" --gauge "$message" 10 60 0
-    else
-        echo "$message ($percent%)"
-    fi
+    printf "\r[%-${width}s] %d%%" "$(printf '#%.0s' $(seq 1 $completed))" "$percentage"
 }
 
 show_checklist() {
@@ -219,5 +217,34 @@ show_tail_log() {
         tail -f "$log_file" | whiptail --title "$title" --scrolltext --textbox /dev/stdin 20 60
     else
         tail -f "$log_file"
+    fi
+}
+
+# 进度条显示
+show_progress() {
+    local current=$1
+    local total=$2
+    local width=50
+    local percentage=$((current * 100 / total))
+    local completed=$((width * current / total))
+    
+    printf "\r[%-${width}s] %d%%" "$(printf '#%.0s' $(seq 1 $completed))" "$percentage"
+}
+
+# 状态显示增强
+show_status() {
+    local app_name="$1"
+    local app_dir="$SCRIPT_DIR/apps/$app_name"
+    
+    if [ -d "$app_dir" ]; then
+        echo "应用名称: $app_name"
+        echo "安装位置: $app_dir"
+        echo "安装状态: $(get_install_status "$app_name")"
+        echo "运行状态: $(get_running_status "$app_name")"
+        echo "版本信息: $(get_version_info "$app_name")"
+        echo "资源使用:"
+        echo "  - CPU: $(get_cpu_usage "$app_name")"
+        echo "  - 内存: $(get_memory_usage "$app_name")"
+        echo "  - 磁盘: $(get_disk_usage "$app_name")"
     fi
 }

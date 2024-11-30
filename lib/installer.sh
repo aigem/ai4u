@@ -176,5 +176,45 @@ clear_resume() {
     rm -f "$RESUME_FILE"
 }
 
+# 安装前检查增强
+pre_install_check() {
+    local app_name="$1"
+    
+    # 系统要求检查
+    check_system_requirements || return 1
+    
+    # 依赖检查
+    check_dependencies "$app_name" || return 1
+    
+    # 资源检查
+    check_resources "$app_name" || return 1
+    
+    # 权限检查
+    check_permissions "$app_name" || return 1
+    
+    # 网络检查
+    check_network_connectivity || return 1
+    
+    return 0
+}
+
+# 并行安装优化
+parallel_install() {
+    local max_jobs=4
+    local current_jobs=0
+    
+    for app in "${INSTALL_QUEUE[@]}"; do
+        if ((current_jobs >= max_jobs)); then
+            wait -n
+            ((current_jobs--))
+        fi
+        
+        install_app "$app" &
+        ((current_jobs++))
+    done
+    
+    wait
+}
+
 # 初始化安装器
 init_installer

@@ -37,6 +37,9 @@ required_dirs=(
     "$SCRIPT_DIR/apps"
     "$SCRIPT_DIR/lib"
     "$SCRIPT_DIR/utils"
+    "$SCRIPT_DIR/logs"
+    "$SCRIPT_DIR/config"
+    "$SCRIPT_DIR/plugins"
 )
 
 for dir in "${required_dirs[@]}"; do

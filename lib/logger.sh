@@ -16,14 +16,17 @@ mkdir -p "$LOG_DIR" || {
     exit 1
 }
 
-# 日志级别
-LOG_LEVEL_DEBUG=0
-LOG_LEVEL_INFO=1
-LOG_LEVEL_WARN=2
-LOG_LEVEL_ERROR=3
+# 日志级别定义
+declare -A LOG_LEVELS=(
+    ["DEBUG"]=0
+    ["INFO"]=1
+    ["WARN"]=2
+    ["ERROR"]=3
+    ["FATAL"]=4
+)
 
 # 当前日志级别
-CURRENT_LOG_LEVEL=$LOG_LEVEL_INFO
+CURRENT_LOG_LEVEL=$LOG_LEVELS["INFO"]
 
 # 日志格式化
 _log() {
@@ -49,28 +52,28 @@ _log() {
 
 # 调试日志
 log_debug() {
-    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVEL_DEBUG ]; then
+    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVELS["DEBUG"] ]; then
         _log "DEBUG" "$1"
     fi
 }
 
 # 信息日志
 log_info() {
-    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVEL_INFO ]; then
+    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVELS["INFO"] ]; then
         _log "INFO" "$1"
     fi
 }
 
 # 警告日志
 log_warn() {
-    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVEL_WARN ]; then
+    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVELS["WARN"] ]; then
         _log "WARN" "$1"
     fi
 }
 
 # 错误日志
 log_error() {
-    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVEL_ERROR ]; then
+    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVELS["ERROR"] ]; then
         _log "ERROR" "$1"
     fi
 }
@@ -79,10 +82,10 @@ log_error() {
 set_log_level() {
     local level="$1"
     case "$level" in
-        debug) CURRENT_LOG_LEVEL=$LOG_LEVEL_DEBUG ;;
-        info)  CURRENT_LOG_LEVEL=$LOG_LEVEL_INFO ;;
-        warn)  CURRENT_LOG_LEVEL=$LOG_LEVEL_WARN ;;
-        error) CURRENT_LOG_LEVEL=$LOG_LEVEL_ERROR ;;
+        debug) CURRENT_LOG_LEVEL=$LOG_LEVELS["DEBUG"] ;;
+        info)  CURRENT_LOG_LEVEL=$LOG_LEVELS["INFO"] ;;
+        warn)  CURRENT_LOG_LEVEL=$LOG_LEVELS["WARN"] ;;
+        error) CURRENT_LOG_LEVEL=$LOG_LEVELS["ERROR"] ;;
         *)     log_error "无效的日志级别: $level" ;;
     esac
 }
@@ -116,6 +119,21 @@ _init_logger() {
             echo "错误: 无法创建日志文件 $LOG_FILE"
             exit 1
         }
+    fi
+}
+
+# 日志轮转
+rotate_logs() {
+    local log_file="$1"
+    local max_size="$2"
+    local max_files="$3"
+    
+    if [ -f "$log_file" ] && [ "$(stat -f%z "$log_file")" -gt "$max_size" ]; then
+        for i in $(seq $((max_files-1)) -1 1); do
+            [ -f "${log_file}.$i" ] && mv "${log_file}.$i" "${log_file}.$((i+1))"
+        done
+        mv "$log_file" "${log_file}.1"
+        touch "$log_file"
     fi
 }
 
