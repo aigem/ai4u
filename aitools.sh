@@ -153,12 +153,16 @@ create_app() {
     }
     
     # 创建setup目录（如果不存在）
-    if [ ! -d "$SCRIPT_DIR/setup" ]; then
-        mkdir -p setup
+    local setup_dir="$SCRIPT_DIR/setup"
+    if [ ! -d "$setup_dir" ]; then
+        mkdir -p "$setup_dir" || {
+            log_error "创建setup目录失败"
+            return 1
+        }
     fi
     
     # 创建入口脚本
-    local setup_script="$SCRIPT_DIR/setup/${app_name}_setup.sh"
+    local setup_script="$setup_dir/${app_name}_setup.sh"
     local vars=(
         "APP_NAME=$app_name"
         "APP_VERSION=1.0.0"
@@ -170,7 +174,10 @@ create_app() {
         log_error "生成入口脚本失败"
         return 1
     }
-    chmod +x "$setup_script"
+    chmod +x "$setup_script" || {
+        log_error "设置入口脚本执行权限失败"
+        return 1
+    }
     
     show_message "成功" "应用 '$app_name' 创建完成\n\n入口脚本位置：$setup_script"
     return 0
