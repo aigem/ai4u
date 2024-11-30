@@ -174,7 +174,7 @@ create_app() {
     if [ ! -f "$setup_template" ]; then
         log_error "入口脚本模板不存在: $setup_template"
         return 1
-    }
+    fi
     log_info "使用模板文件: $setup_template"
     
     local vars=(
