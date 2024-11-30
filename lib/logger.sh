@@ -26,7 +26,7 @@ declare -A LOG_LEVELS=(
 )
 
 # 当前日志级别
-CURRENT_LOG_LEVEL=$LOG_LEVELS["INFO"]
+CURRENT_LOG_LEVEL=${LOG_LEVELS["INFO"]}
 
 # 日志格式化
 _log() {
@@ -59,21 +59,21 @@ log_debug() {
 
 # 信息日志
 log_info() {
-    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVELS["INFO"] ]; then
+    if (( CURRENT_LOG_LEVEL <= ${LOG_LEVELS["INFO"]} )); then
         _log "INFO" "$1"
     fi
 }
 
 # 警告日志
 log_warn() {
-    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVELS["WARN"] ]; then
+    if (( CURRENT_LOG_LEVEL <= ${LOG_LEVELS["WARN"]} )); then
         _log "WARN" "$1"
     fi
 }
 
 # 错误日志
 log_error() {
-    if [ $CURRENT_LOG_LEVEL -le $LOG_LEVELS["ERROR"] ]; then
+    if (( CURRENT_LOG_LEVEL <= ${LOG_LEVELS["ERROR"]} )); then
         _log "ERROR" "$1"
     fi
 }

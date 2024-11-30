@@ -8,7 +8,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # 引入配置文件
-source "$SCRIPT_DIR/config.sh" || {
+source "$SCRIPT_DIR/config/config.sh" || {
     echo "错误: 无法加载配置文件"
     exit 1
 }
@@ -28,7 +28,6 @@ create_directories() {
 install_dependencies() {
     for dep in "${DEPENDENCIES[@]}"; do
         echo "安装系统依赖: $dep"
-        # 这里根据实际情况使用apt-get、yum等包管理器
         if command -v apt-get >/dev/null; then
             apt-get install -y "$dep" || return 1
         elif command -v yum >/dev/null; then
@@ -55,8 +54,6 @@ install_python_packages() {
 # 配置应用
 configure_app() {
     # 在这里添加应用特定的配置逻辑
-    # 例如：生成配置文件、设置权限等
-    
     return 0
 }
 

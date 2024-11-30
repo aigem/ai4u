@@ -53,27 +53,35 @@ done
 
 # 初始化函数
 init_aitools() {
+    log_info "正在初始化 AI Tools..."
+    
     # 检查并创建必要的目录结构
     check_directory_structure "$SCRIPT_DIR" || {
         log_error "初始化失败：目录结构检查未通过"
-        exit 1
+        return 1
     }
     
     # 检查必要的工具
-    local required_tools=("git" "curl" "wget")
+    local required_tools=("git" "curl" "wget" "python3" "pip3")
     for tool in "${required_tools[@]}"; do
         if ! command -v "$tool" &> /dev/null; then
             log_error "缺少必要工具: $tool"
-            exit 1
+            return 1
         fi
     done
     
-    # 初始化日志
-    source "$LIB_DIR/logger.sh" || {
-        echo "错误: 无法加载日志模块"
-        exit 1
+    # 检查模板文件
+    if [ ! -f "$SCRIPT_DIR/templates/app_template/install.sh" ]; then
+        log_error "缺少安装脚本模板"
+        return 1
+    fi
+    
+    if [ ! -f "$SCRIPT_DIR/templates/config_template.sh" ]; then
+        log_error "缺少配置文件模板"
+        return 1
     }
     
+    log_info "初始化完成"
     return 0
 }
 

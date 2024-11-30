@@ -283,32 +283,31 @@ install_system_package() {
 # 检查目录结构
 check_directory_structure() {
     local base_dir="$1"
-    local required_dirs=(
-        "templates"
-        "templates/app_template"
-        "apps"
-        "lib"
-        "utils"
-        "logs"
-    )
     
+    # 首先确保基础目录存在
     for dir in "${required_dirs[@]}"; do
         if [ ! -d "$base_dir/$dir" ]; then
-            log_error "缺少必要目录: $dir"
-            return 1
+            mkdir -p "$base_dir/$dir" || {
+                log_error "无法创建目录: $dir"
+                return 1
+            }
         fi
     done
     
-    # 检查必要文件
-    local required_files=(
+    # 确保必要文件存在
+    local template_files=(
         "templates/app_template/install.sh"
         "templates/config_template.sh"
     )
     
-    for file in "${required_files[@]}"; do
+    for file in "${template_files[@]}"; do
         if [ ! -f "$base_dir/$file" ]; then
-            log_error "缺少必要文件: $file"
-            return 1
+            # 如果文件不存在，尝试从默认模板创建
+            mkdir -p "$(dirname "$base_dir/$file")"
+            cp "$base_dir/templates/defaults/$(basename "$file")" "$base_dir/$file" 2>/dev/null || {
+                log_error "缺少必要文件: $file"
+                return 1
+            }
         fi
     done
     
