@@ -3,6 +3,11 @@
 # 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="$SCRIPT_DIR/lib"
+UTILS_DIR="$SCRIPT_DIR/utils"
+
+# 设置默认语言环境
+export LANG=C
+export LC_ALL=C
 
 # 引入必要的库
 source "$LIB_DIR/logger.sh" || {
@@ -154,7 +159,7 @@ create_app() {
     log_info "创建应用 $app_name..."
     
     # 使用模板工具生成应用骨架
-    source "$SCRIPT_DIR/utils/template_utils.sh" || {
+    source "$UTILS_DIR/template_utils.sh" || {
         log_error "加载模板工具失败"
         return 1
     }
