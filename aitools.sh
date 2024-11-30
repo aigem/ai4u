@@ -30,6 +30,53 @@ source "$LIB_DIR/ui.sh" || {
 # 版本信息
 VERSION="1.0.0"
 
+# 检查必要目录
+required_dirs=(
+    "$SCRIPT_DIR/templates"
+    "$SCRIPT_DIR/templates/app_template"
+    "$SCRIPT_DIR/apps"
+    "$SCRIPT_DIR/lib"
+    "$SCRIPT_DIR/utils"
+)
+
+for dir in "${required_dirs[@]}"; do
+    if [ ! -d "$dir" ]; then
+        mkdir -p "$dir" || {
+            log_error "无法创建必要目录: $dir"
+            exit 1
+        }
+    fi
+done
+
+# 初始化函数
+init_aitools() {
+    # 检查并创建必要的目录结构
+    check_directory_structure "$SCRIPT_DIR" || {
+        log_error "初始化失败：目录结构检查未通过"
+        exit 1
+    }
+    
+    # 检查必要的工具
+    local required_tools=("git" "curl" "wget")
+    for tool in "${required_tools[@]}"; do
+        if ! command -v "$tool" &> /dev/null; then
+            log_error "缺少必要工具: $tool"
+            exit 1
+        fi
+    done
+    
+    # 初始化日志
+    source "$LIB_DIR/logger.sh" || {
+        echo "错误: 无法加载日志模块"
+        exit 1
+    }
+    
+    return 0
+}
+
+# 在主函数之前调用初始化
+init_aitools
+
 # 显示帮助信息
 show_help() {
     cat << EOF
@@ -61,7 +108,7 @@ list_apps() {
     if [ ! -d "$apps_dir" ]; then
         log_error "应用目录不存在: $apps_dir"
         return 1
-    }
+    fi
     
     # 列出所有应用
     log_info "已安装的应用:"
@@ -139,11 +186,17 @@ create_app() {
     local app_name="$1"
     local app_dir="$SCRIPT_DIR/apps/$app_name"
     
+    # 检查目录结构
+    check_directory_structure "$SCRIPT_DIR" || {
+        log_error "目录结构检查失败"
+        return 1
+    }
+    
     # 检查应用名称是否已存在
     if [ -d "$app_dir" ]; then
         log_error "应用 '$app_name' 已存在"
         return 1
-    }
+    fi
     
     log_info "创建应用 $app_name..."
     

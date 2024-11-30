@@ -279,3 +279,38 @@ install_system_package() {
     
     return 0
 }
+
+# 检查目录结构
+check_directory_structure() {
+    local base_dir="$1"
+    local required_dirs=(
+        "templates"
+        "templates/app_template"
+        "apps"
+        "lib"
+        "utils"
+        "logs"
+    )
+    
+    for dir in "${required_dirs[@]}"; do
+        if [ ! -d "$base_dir/$dir" ]; then
+            log_error "缺少必要目录: $dir"
+            return 1
+        fi
+    done
+    
+    # 检查必要文件
+    local required_files=(
+        "templates/app_template/install.sh"
+        "templates/config_template.sh"
+    )
+    
+    for file in "${required_files[@]}"; do
+        if [ ! -f "$base_dir/$file" ]; then
+            log_error "缺少必要文件: $file"
+            return 1
+        fi
+    done
+    
+    return 0
+}

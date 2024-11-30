@@ -84,13 +84,13 @@ create_app_structure() {
     )
     
     # 复制安装脚本
-    cp -r "$SCRIPT_DIR/templates/app_template/install.sh" "$app_dir/" || {
+    cp -r "$APP_TEMPLATE_DIR/install.sh" "$app_dir/" || {
         log_error "复制安装脚本失败"
         return 1
     }
     
     # 生成配置文件
-    replace_template_vars "$SCRIPT_DIR/templates/config_template.sh" "$app_dir/config/config.sh" "${template_vars[@]}" || {
+    replace_template_vars "$TEMPLATE_DIR/config_template.sh" "$app_dir/config/config.sh" "${template_vars[@]}" || {
         log_error "生成配置文件失败"
         return 1
     }
