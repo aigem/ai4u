@@ -146,7 +146,11 @@ create_app() {
     log_info "创建应用 $app_name..."
     
     # 使用模板工具生成应用骨架
-    source "$SCRIPT_DIR/utils/template_utils.sh"
+    source "$SCRIPT_DIR/utils/template_utils.sh" || {
+        log_error "加载模板工具失败"
+        return 1
+    }
+    
     generate_app_skeleton "$app_name" "$app_dir" || {
         log_error "生成应用骨架失败"
         return 1
@@ -156,13 +160,23 @@ create_app() {
     local setup_dir="$SCRIPT_DIR/setup"
     if [ ! -d "$setup_dir" ]; then
         mkdir -p "$setup_dir" || {
-            log_error "创建setup目录失败"
+            log_error "创建setup目录失败: $setup_dir"
             return 1
         }
+        log_info "创建setup目录成功: $setup_dir"
     fi
     
     # 创建入口脚本
+    local setup_template="$SCRIPT_DIR/templates/setup_template.sh"
     local setup_script="$setup_dir/${app_name}_setup.sh"
+    
+    # 检查模板文件是否存在
+    if [ ! -f "$setup_template" ]; then
+        log_error "入口脚本模板不存在: $setup_template"
+        return 1
+    }
+    log_info "使用模板文件: $setup_template"
+    
     local vars=(
         "APP_NAME=$app_name"
         "APP_VERSION=1.0.0"
@@ -170,14 +184,18 @@ create_app() {
     )
     
     # 使用模板工具生成入口脚本
-    replace_template_vars "$SCRIPT_DIR/templates/setup_template.sh" "$setup_script" "${vars[@]}" || {
-        log_error "生成入口脚本失败"
+    log_info "正在生成入口脚本: $setup_script"
+    replace_template_vars "$setup_template" "$setup_script" "${vars[@]}" || {
+        log_error "生成入口脚本失败: $setup_script"
         return 1
     }
+    
+    # 设置执行权限
     chmod +x "$setup_script" || {
-        log_error "设置入口脚本执行权限失败"
+        log_error "设置入口脚本执行权限失败: $setup_script"
         return 1
     }
+    log_info "入口脚本生成成功: $setup_script"
     
     show_message "成功" "应用 '$app_name' 创建完成\n\n入口脚本位置：$setup_script"
     return 0
