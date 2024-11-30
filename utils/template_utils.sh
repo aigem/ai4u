@@ -70,60 +70,34 @@ create_app_structure() {
     
     log_info "创建应用目录结构..."
     
-    # 检查应用模板目录
-    if [ ! -d "$APP_TEMPLATE_DIR" ]; then
-        log_error "应用模板目录不存在: $APP_TEMPLATE_DIR"
-        return 1
-    fi
-    
-    # 创建应用目录（如果不存在）
-    if [ ! -d "$app_dir" ]; then
-        mkdir -p "$app_dir" || {
-            log_error "创建应用目录失败: $app_dir"
-            return 1
-        }
-    fi
-    
-    # 复制模板文件
-    cp -r "$APP_TEMPLATE_DIR"/* "$app_dir/" || {
-        log_error "复制模板文件失败"
+    # 创建必要的子目录
+    mkdir -p "$app_dir"/{config,data,logs} || {
+        log_error "创建应用子目录失败"
         return 1
     }
     
-    # 创建setup目录（如果不存在）
-    local setup_dir="$ROOT_DIR/setup"
-    mkdir -p "$setup_dir" || {
-        log_error "创建setup目录失败: $setup_dir"
-        return 1
-    }
-    
-    # 生成入口脚本
-    local setup_template="$TEMPLATE_DIR/setup_template.sh"
-    local setup_script="$setup_dir/${app_name}_setup.sh"
-    
-    local vars=(
+    # 复制并处理模板文件
+    local template_vars=(
         "APP_NAME=$app_name"
         "APP_VERSION=1.0.0"
         "TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')"
     )
     
-    replace_template_vars "$setup_template" "$setup_script" "${vars[@]}" || {
-        log_error "生成入口脚本失败"
-        return 1
-    }
-    
-    # 设置执行权限
-    chmod +x "$setup_script" || {
-        log_error "设置入口脚本执行权限失败"
+    # 复制安装脚本
+    cp -r "$SCRIPT_DIR/templates/app_template/install.sh" "$app_dir/" || {
+        log_error "复制安装脚本失败"
         return 1
     }
     
     # 生成配置文件
-    local config_template="$TEMPLATE_DIR/config_template.sh"
-    local config_file="$app_dir/config.sh"
-    
-    replace_template_vars "$config_template" "$config_file" "${vars[@]}" || {
+    replace_template_vars "$SCRIPT_DIR/templates/config_template.sh" "$app_dir/config/config.sh" "${template_vars[@]}" || {
         log_error "生成配置文件失败"
+        return 1
+    }
+    
+    # 设置执行权限
+    chmod +x "$app_dir/install.sh" || {
+        log_error "设置执行权限失败"
         return 1
     }
     

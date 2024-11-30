@@ -53,35 +53,25 @@ AI Tools 安装管理系统 v$VERSION
 EOF
 }
 
-# 列出可用的应用
+# 获取应用列表
 list_apps() {
     local apps_dir="$SCRIPT_DIR/apps"
-    local available_apps=()
     
     # 检查应用目录是否存在
     if [ ! -d "$apps_dir" ]; then
-        show_message "错误" "应用目录不存在"
+        log_error "应用目录不存在: $apps_dir"
         return 1
-    fi
+    }
     
-    # 获取所有应用
-    while IFS= read -r app_dir; do
-        if [ -f "$app_dir/install.sh" ]; then
-            local app_name=$(basename "$app_dir")
-            local description=""
-            if [ -f "$app_dir/README.md" ]; then
-                description=$(head -n 1 "$app_dir/README.md" | sed 's/^#\s*//')
-            fi
-            available_apps+=("$app_name" "$description")
+    # 列出所有应用
+    log_info "已安装的应用:"
+    for app in "$apps_dir"/*; do
+        if [ -d "$app" ]; then
+            basename "$app"
         fi
-    done < <(find "$apps_dir" -mindepth 1 -maxdepth 1 -type d)
+    done
     
-    if [ ${#available_apps[@]} -eq 0 ]; then
-        show_message "提示" "目前没有可用的应用。\n\n您可以使用 'create-app' 命令创建新应用。\n\n操作提示：\n - 使用方向键选择选项\n - 按 Enter 键确认\n - 按 Tab 键切换按钮"
-        return 0
-    fi
-    
-    show_menu "可用的 AI 工具" "使用方向键选择应用，Enter 键确认，Tab 键切换按钮" "${available_apps[@]}"
+    return 0
 }
 
 # 获取应用描述
