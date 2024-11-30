@@ -1,0 +1,63 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+logs/
+*.log.*
+
+# Runtime data
+*.pid
+*.seed
+*.pid.lock
+
+# Application specific
+apps/*/data/
+apps/*/logs/
+apps/*/temp/
+apps/*/cache/
+
+# Temporary files
+*.tmp
+temp/
+.temp/
+tmp/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build output
+dist/
+build/
+out/
+
+# Debug files
+*.debug
+
+# Backup files
+*.bak
+*.backup
+*.[Bb]ak
+
+安装脚本*.md
+DEVELOPMENT.md
+README.md
