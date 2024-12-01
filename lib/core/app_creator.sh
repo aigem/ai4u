@@ -135,6 +135,21 @@ if [ -f "$APP_DIR/scripts/test.sh" ]; then
     bash "$APP_DIR/scripts/test.sh"
 fi
 
+# 优化安装流程提示
+log_info "检查安装环境..."
+if [ -f "$APP_DIR/.installed" ]; then
+    read -p "应用已安装，是否重新安装？[y/N] " choice
+    case "$choice" in
+        y|Y) 
+            log_info "开始重新安装..."
+            ;;
+        *)
+            log_info "取消安装"
+            exit 0
+            ;;
+    esac
+fi
+
 # 创建安装标记
 touch "$APP_DIR/.installed"
 
