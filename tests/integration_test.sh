@@ -15,6 +15,46 @@ source "$ROOT_DIR/lib/core/app_manager.sh"
 TEST_APP="test_app"
 TEST_APP_DIR="$APPS_DIR/$TEST_APP"
 
+# 测试配置文件
+test_config_files() {
+    log_info "测试配置文件..."
+    
+    # 创建测试应用
+    create_app "$TEST_APP" "web" || handle_error "创建测试应用失败"
+    
+    # 检查基本目录结构
+    [ -d "$TEST_APP_DIR" ] || handle_error "应用目录不存在"
+    [ -d "$TEST_APP_DIR/config" ] || handle_error "配置目录不存在"
+    [ -d "$TEST_APP_DIR/scripts" ] || handle_error "脚本目录不存在"
+    [ -d "$TEST_APP_DIR/data" ] || handle_error "数据目录不存在"
+    [ -d "$TEST_APP_DIR/logs" ] || handle_error "日志目录不存在"
+    
+    # 检查必要文件
+    [ -f "$TEST_APP_DIR/config.yaml" ] || handle_error "主配置文件不存在"
+    [ -f "$TEST_APP_DIR/config/settings.yaml.template" ] || handle_error "配置模板不存在"
+    [ -f "$TEST_APP_DIR/requirements.txt" ] || handle_error "依赖文件不存在"
+    
+    # 检查脚本文件
+    for script in "install.sh" "uninstall.sh" "update.sh" "status.sh" "test.sh"; do
+        [ -f "$TEST_APP_DIR/scripts/$script" ] || handle_error "脚本不存在：$script"
+        [ -x "$TEST_APP_DIR/scripts/$script" ] || handle_error "脚本无执行权限：$script"
+    done
+    
+    # 检查配置文件内容
+    local name=$(yaml_get "$TEST_APP_DIR/config.yaml" "name")
+    local type=$(yaml_get "$TEST_APP_DIR/config.yaml" "type")
+    local version=$(yaml_get "$TEST_APP_DIR/config.yaml" "version")
+    local status=$(yaml_get "$TEST_APP_DIR/config.yaml" "status")
+    
+    [ "$name" = "$TEST_APP" ] || handle_error "配置文件中的应用名称不正确"
+    [ "$type" = "web" ] || handle_error "配置文件中的应用类型不正确"
+    [ "$version" = "1.0.0" ] || handle_error "配置文件中的版本号不正确"
+    [ "$status" = "not_installed" ] || handle_error "配置文件中的应用状态不正确"
+    
+    log_success "配置文件测试通过"
+    return 0
+}
+
 # 添加测试环境设置
 setup_test_env() {
     # 创建临时测试目录
@@ -343,46 +383,6 @@ else
         run_all_tests
     fi
 fi
-
-# 测试配置文件
-test_config_files() {
-    log_info "测试配置文件..."
-    
-    # 创建测试应用
-    create_app "$TEST_APP" "web" || handle_error "创建测试应用失败"
-    
-    # 检查基本目录结构
-    [ -d "$TEST_APP_DIR" ] || handle_error "应用目录不存在"
-    [ -d "$TEST_APP_DIR/config" ] || handle_error "配置目录不存在"
-    [ -d "$TEST_APP_DIR/scripts" ] || handle_error "脚本目录不存在"
-    [ -d "$TEST_APP_DIR/data" ] || handle_error "数据目录不存在"
-    [ -d "$TEST_APP_DIR/logs" ] || handle_error "日志目录不存在"
-    
-    # 检查必要文件
-    [ -f "$TEST_APP_DIR/config.yaml" ] || handle_error "主配置文件不存在"
-    [ -f "$TEST_APP_DIR/config/settings.yaml.template" ] || handle_error "配置模板不存在"
-    [ -f "$TEST_APP_DIR/requirements.txt" ] || handle_error "依赖文件不存在"
-    
-    # 检查脚本文件
-    for script in "install.sh" "uninstall.sh" "update.sh" "status.sh" "test.sh"; do
-        [ -f "$TEST_APP_DIR/scripts/$script" ] || handle_error "脚本不存在：$script"
-        [ -x "$TEST_APP_DIR/scripts/$script" ] || handle_error "脚本无执行权限：$script"
-    done
-    
-    # 检查配置文件内容
-    local name=$(yaml_get "$TEST_APP_DIR/config.yaml" "name")
-    local type=$(yaml_get "$TEST_APP_DIR/config.yaml" "type")
-    local version=$(yaml_get "$TEST_APP_DIR/config.yaml" "version")
-    local status=$(yaml_get "$TEST_APP_DIR/config.yaml" "status")
-    
-    [ "$name" = "$TEST_APP" ] || handle_error "配置文件中的应用名称不正确"
-    [ "$type" = "web" ] || handle_error "配置文件中的应用类型不正确"
-    [ "$version" = "1.0.0" ] || handle_error "配置文件中的版本号不正确"
-    [ "$status" = "not_installed" ] || handle_error "配置文件中的应用状态不正确"
-    
-    log_success "配置文件测试通过"
-    return 0
-}
 
 # 创建示例测试脚本时不需要再进行完整测试
 create_test_script() {
