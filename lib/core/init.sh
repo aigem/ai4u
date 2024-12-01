@@ -102,6 +102,7 @@ parse_arguments() {
             fi
             if [ "$INTERACTIVE" = false ] && [ -z "$APP_TYPE" ]; then
                 log_error "非交互式创建需要提供应用类型"
+                show_usage
                 exit 1
             fi
             ;;
