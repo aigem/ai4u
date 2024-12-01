@@ -107,7 +107,7 @@ EOF
 # 初始化系统
 init_system() {
     # 检查是否为root用户
-    check_root_user
+    # check_root_user
     
     # 检查系统依赖
     check_dependencies
