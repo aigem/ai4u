@@ -51,19 +51,20 @@ show_creation_wizard() {
     # 步骤3：环境设置
     echo -e "\n步骤3：环境设置"
     echo "-------------"
-    read -p "您的应用是否需要环境变量？(y/n): " has_env
-    declare -A env_vars
+    read -p "是否需要配置环境变量？(y/n): " has_env
     if [[ $has_env =~ ^[Yy]$ ]]; then
-        while true; do
-            read -p "输入变量名（输入'done'完成）: " var_name
-            [[ $var_name == "done" ]] && break
-            read -p "输入$var_name的值: " var_value
-            env_vars[$var_name]=$var_value
+        echo "输入环境变量（格式：KEY=VALUE，每行一个，输入空行结束）："
+        while IFS= read -r line; do
+            [[ -z "$line" ]] && break
+            env_vars+=("$line")
         done
     fi
 
     # 创建应用
-    create_app_from_wizard "$name" "$type" "${deps[@]}" "$(declare -p env_vars)"
+    create_app_from_wizard "$name" "$type" "${deps[@]}" "${env_vars[@]}"
+    
+    # 显示下一步操作
+    show_next_steps "$name"
 }
 
 # 从向导输入创建应用
@@ -71,8 +72,7 @@ create_app_from_wizard() {
     local name="$1"
     local type="$2"
     shift 2
-    local deps=("$@")
-    eval "declare -A env_vars="${!#}
+    local deps=("${@}")
 
     # 创建应用目录
     local app_dir="$APPS_DIR/$name"
@@ -82,40 +82,43 @@ create_app_from_wizard() {
     fi
 
     mkdir -p "$app_dir"
-    mkdir -p "$app_dir/steps"
 
-    # 创建配置
+    # 复制基础配置
     cp "$TEMPLATES_DIR/app_configs/base.yaml" "$app_dir/config.yaml"
+
+    # 更新配置
     update_yaml "$app_dir/config.yaml" "name" "$name"
     update_yaml "$app_dir/config.yaml" "type" "$type"
     update_yaml "$app_dir/config.yaml" "version" "1.0.0"
-    
-    # 如果指定了依赖项则添加
+
+    # 如果有依赖项，添加到配置
     if [ ${#deps[@]} -gt 0 ]; then
-        update_yaml "$app_dir/config.yaml" "deps" "${deps[*]}"
+        for dep in "${deps[@]}"; do
+            update_yaml "$app_dir/config.yaml" "dependencies[]" "$dep"
+        done
     fi
 
-    # 如果指定了环境变量则添加
-    for var in "${!env_vars[@]}"; do
-        update_yaml "$app_dir/config.yaml" "env.$var" "${env_vars[$var]}"
-    done
+    # 如果有环境变量，添加到配置
+    if [ ${#env_vars[@]} -gt 0 ]; then
+        for env in "${env_vars[@]}"; do
+            update_yaml "$app_dir/config.yaml" "environment[]" "$env"
+        done
+    fi
 
-    # 创建必需的脚本
-    echo '#!/bin/bash' > "$app_dir/status.sh"
+    # 创建其他必需文件
+    touch "$app_dir/status.sh"
     chmod +x "$app_dir/status.sh"
 
     log_success "应用创建成功：$name"
-    show_next_steps "$name"
+    return 0
 }
 
 # 显示创建后的下一步操作
 show_next_steps() {
     local name="$1"
-    echo
+    echo -e "\n恭喜！应用 $name 已创建成功。"
     echo "下一步操作："
-    echo "1. 查看配置文件 apps/$name/config.yaml"
-    echo "2. 在 apps/$name/steps/ 中添加自定义安装步骤"
-    echo "3. 使用以下命令测试安装：./aitools.sh install $name"
-    echo
-    echo "更多信息请参阅 README.md 文档"
+    echo "1. 运行 ./aitools.sh install $name 安装应用"
+    echo "2. 运行 ./aitools.sh status $name 检查应用状态"
+    echo "3. 编辑 apps/$name/config.yaml 修改配置"
 }

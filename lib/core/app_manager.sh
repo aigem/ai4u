@@ -11,7 +11,7 @@ install_app() {
     # 显示欢迎信息
     show_welcome_message "$app_name"
 
-    # 安装前检查
+    # 检查安装前提条件
     if ! check_installation_prerequisites "$app_name"; then
         return 1
     fi
@@ -50,6 +50,39 @@ install_app() {
     return 0
 }
 
+# 检查安装前提条件
+check_installation_prerequisites() {
+    local app_name="$1"
+    local app_dir="$APPS_DIR/$app_name"
+    local config_file="$app_dir/config.yaml"
+
+    # 检查应用目录是否已存在
+    if [ -d "$app_dir" ]; then
+        log_error "应用 $app_name 已存在"
+        return 1
+    fi
+
+    # 检查系统资源
+    local required_disk_space=1024  # MB
+    local required_memory=512       # MB
+
+    # 检查磁盘空间
+    local available_disk=$(df -m "$APPS_DIR" | awk 'NR==2 {print $4}')
+    if [ "$available_disk" -lt "$required_disk_space" ]; then
+        log_error "磁盘空间不足。需要: ${required_disk_space}MB, 可用: ${available_disk}MB"
+        return 1
+    fi
+
+    # 检查内存
+    local available_memory=$(free -m | awk 'NR==2 {print $7}')
+    if [ "$available_memory" -lt "$required_memory" ]; then
+        log_error "内存不足。需要: ${required_memory}MB, 可用: ${available_memory}MB"
+        return 1
+    fi
+
+    return 0
+}
+
 # 列出所有已安装的应用
 list_apps() {
     echo "=============================="
@@ -79,6 +112,33 @@ list_apps() {
     done
     echo "----------------------------"
     echo "使用 'status <应用名称>' 查看详细信息"
+}
+
+# 移除AI应用
+remove_app() {
+    local app_name="$1"
+    local app_dir="$APPS_DIR/$app_name"
+
+    log_info "开始移除 $app_name..."
+
+    # 检查应用是否存在
+    if [ ! -d "$app_dir" ]; then
+        log_error "应用 $app_name 不存在"
+        return 1
+    fi
+
+    # 执行卸载前的清理工作
+    if [ -f "$app_dir/uninstall.sh" ]; then
+        log_info "执行卸载脚本..."
+        bash "$app_dir/uninstall.sh"
+    fi
+
+    # 移除应用目录
+    log_info "移除应用目录..."
+    rm -rf "$app_dir"
+
+    log_info "应用 $app_name 已成功移除"
+    return 0
 }
 
 # 显示欢迎信息
