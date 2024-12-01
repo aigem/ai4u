@@ -280,15 +280,15 @@ create_app_interactive() {
 
     # 选择应用类型
     local app_type=""
-    echo "请选择应用类型："
-    select type in "web" "cli" "service" "other"; do
-        case $type in
-            web|cli|service|other)
-                app_type="$type"
-                break
-                ;;
-            *) echo "请选择有效的选项 1-4";;
-        esac
+    local options=("web" "cli" "service" "other")
+    PS3="请选择应用类型 (1-4): "
+    select type in "${options[@]}"; do
+        if [[ -n "$type" ]]; then
+            app_type="$type"
+            break
+        else
+            echo "请选择有效的选项 1-4"
+        fi
     done
 
     # 输入版本号
