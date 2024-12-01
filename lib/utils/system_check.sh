@@ -136,8 +136,14 @@ check_ui_dependencies() {
     if [ ${#missing_deps[@]} -gt 0 ]; then
         log_info "检测到缺少UI组件: ${missing_deps[*]}"
         
+        # 从配置文件读取自动安装设置
+        local auto_install
+        if [ -f "$CONFIG_DIR/settings.yaml" ]; then
+            auto_install=$(yaml_get "$CONFIG_DIR/settings.yaml" "ui.auto_install_deps")
+        fi
+        
         # 检查是否可以自动安装
-        if [ "$AUTO_INSTALL_DEPS" = "true" ]; then
+        if [ "$auto_install" = "true" ]; then
             log_info "正在自动安装UI组件..."
             if [ -f /etc/debian_version ]; then
                 sudo apt-get update && sudo apt-get install -y "${missing_deps[@]}"
