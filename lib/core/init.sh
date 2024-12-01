@@ -126,7 +126,12 @@ parse_arguments() {
 
 # 显示使用说明
 show_usage() {
-    echo "使用方法: $(basename "$0") <命令> [选项] [应用名称]"
+    echo "使用方法: $(basename "$0") [界面选项] <命令> [选项] [应用名称]"
+    echo
+    echo "界面选项:"
+    echo "  --force-ui     强制使用图形界面(TUI)"
+    echo "  --no-ui        使用基础命令行界面"
+    echo "  (默认使用TUI界面，如果不可用则自动切换到命令行界面)"
     echo
     echo "命令:"
     echo "  create     创建新应用"
@@ -142,10 +147,9 @@ show_usage() {
     echo "  -t, --type TYPE      指定应用类型 (web|cli|service|other)"
     echo
     echo "示例:"
-    echo "  $(basename "$0") create myapp --type web     # 创建Web应用"
-    echo "  $(basename "$0") create --interactive        # 交互式创建应用"
-    echo "  $(basename "$0") install myapp              # 安装应用"
-    echo "  $(basename "$0") test                       # 运行所有测试"
+    echo "  $(basename "$0")                           # 启动TUI界面"
+    echo "  $(basename "$0") --force-ui               # 强制使用TUI界面"
+    echo "  $(basename "$0") create myapp --type web  # 命令行模式创建应用"
 }
 
 # 初始化系统

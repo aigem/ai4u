@@ -141,18 +141,24 @@ check_ui_dependencies() {
             log_info "正在自动安装UI组件..."
             if [ -f /etc/debian_version ]; then
                 sudo apt-get update && sudo apt-get install -y "${missing_deps[@]}"
+                # 检查安装是否成功
+                if command -v whiptail >/dev/null 2>&1; then
+                    log_success "UI组件安装成功"
+                    return 0
+                fi
             elif [ -f /etc/redhat-release ]; then
                 sudo yum install -y "${missing_deps[@]}"
-            else
-                log_warn "不支持的系统类型，将使用基础命令行界面"
-                export USE_BASIC_UI=true
-                return 0
+                # 检查安装是否成功
+                if command -v whiptail >/dev/null 2>&1; then
+                    log_success "UI组件安装成功"
+                    return 0
+                fi
             fi
-        else
-            log_warn "未启用自动安装，将使用基础命令行界面"
-            export USE_BASIC_UI=true
-            return 0
         fi
+        
+        # 如果安装失败或未启用自动安装
+        log_warn "UI组件不可用，将使用基础命令行界面"
+        export USE_BASIC_UI=true
     fi
     
     return 0
