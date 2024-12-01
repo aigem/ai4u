@@ -102,7 +102,7 @@ test_create_app() {
     local INTERACTIVE_APP="test_app_interactive"
     local INTERACTIVE_APP_DIR="$APPS_DIR/$INTERACTIVE_APP"
     
-    echo -e "$INTERACTIVE_APP\nweb\n" | create_app_interactive || handle_error "交互式创建应用失败"
+    echo -e "$INTERACTIVE_APP\n1\n1.0.0\n测试描述\n" | create_app_interactive || handle_error "交互式创建应用失败"
     
     # 检查交互式创建的目录结构
     for dir in "scripts" "config" "data" "logs"; do
