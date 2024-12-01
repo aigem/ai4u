@@ -18,6 +18,7 @@ TEST_APP_DIR="$APPS_DIR/$TEST_APP"
 # 设置测试模式
 export TEST_MODE=true
 export USE_BASIC_UI=true
+export COMMAND="test"
 
 # 清理函数
 cleanup() {
@@ -242,7 +243,7 @@ test_remove_app() {
     fi
     
     # 移除应用
-    echo "y" | remove_app "$TEST_APP" || handle_error "移除应用失败"
+    echo "y" | remove_app "$TEST_APP" || handle_error "移除应��失败"
     
     # 检查应用目录是否已删除
     [ ! -d "$TEST_APP_DIR" ] || handle_error "应用目录仍然存在"
@@ -312,7 +313,15 @@ run_all_tests() {
 }
 
 # 执行测试
-run_all_tests
+if [ -n "$BASH_SOURCE" ] && [ "$BASH_SOURCE" = "$0" ]; then
+    # 直接运行测试脚本时
+    run_all_tests
+else
+    # 通过 aitools.sh test 运行时
+    if [ "$COMMAND" = "test" ]; then
+        run_all_tests
+    fi
+fi
 
 test_config_files() {
     log_info "测试配置文件..."

@@ -23,7 +23,7 @@ show_app_browser() {
     if [ ${#available_apps[@]} -eq 0 ]; then
         whiptail --msgbox "没有可用的应用模板" 10 40
         return 1
-    }
+    fi
     
     # 构建菜单项
     for app in "${available_apps[@]}"; do

@@ -54,6 +54,12 @@ main() {
     # 初始化系统
     source "$ROOT_DIR/lib/core/init.sh"
     
+    # 如果是测试命令，直接运行测试
+    if [ "$COMMAND" = "test" ]; then
+        source "$ROOT_DIR/tests/integration_test.sh"
+        return
+    fi
+    
     # 如果是测试模式，直接执行命令
     if [ "$TEST_MODE" = "true" ]; then
         handle_cli_mode
