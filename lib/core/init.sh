@@ -152,10 +152,30 @@ show_usage() {
     echo "  $(basename "$0") create myapp --type web  # 命令行模式创建应用"
 }
 
+# 设置脚本权限
+setup_permissions() {
+    log_info "设置脚本执行权限..."
+    
+    # 主脚本
+    chmod +x "$ROOT_DIR/aitools.sh"
+    
+    # 核心脚本
+    chmod +x "$ROOT_DIR/lib/core/"*.sh
+    
+    # 工具脚本
+    chmod +x "$ROOT_DIR/lib/utils/"*.sh
+    
+    # TUI脚本
+    chmod +x "$ROOT_DIR/lib/tui/"*.sh
+    
+    # 测试脚本
+    chmod +x "$ROOT_DIR/tests/"*.sh
+}
+
 # 初始化系统
 init_system() {
-    # 检查是否为root用户
-    # check_root_user
+    # 设置脚本权限
+    setup_permissions
     
     # 检查系统依赖
     check_dependencies

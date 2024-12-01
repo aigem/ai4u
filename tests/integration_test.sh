@@ -39,6 +39,9 @@ handle_error() {
 test_cli_mode() {
     log_info "测试命令行模式..."
     
+    # 确保脚本有执行权限
+    chmod +x "$ROOT_DIR/aitools.sh"
+    
     # 测试创建应用
     "$ROOT_DIR/aitools.sh" --test-mode create "$TEST_APP" --type web || handle_error "CLI模式创建应用失败"
     
@@ -243,7 +246,7 @@ test_remove_app() {
     fi
     
     # 移除应用
-    echo "y" | remove_app "$TEST_APP" || handle_error "移除应��失败"
+    echo "y" | remove_app "$TEST_APP" || handle_error "移除应用失败"
     
     # 检查应用目录是否已删除
     [ ! -d "$TEST_APP_DIR" ] || handle_error "应用目录仍然存在"
