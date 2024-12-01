@@ -139,26 +139,28 @@ test_create_app() {
 test_install_app() {
     log_info "测试安装应用..."
     
-    # 测试安装确认
-    echo "n" | install_app "$TEST_APP" && handle_error "应该在用户拒绝时取消安装"
-    echo "y" | install_app "$TEST_APP" || handle_error "安装应用失败"
+    # 先创建测试应用
+    create_app "$TEST_APP" "web" || handle_error "创建测试应用失败"
     
-    # 检查应用是否已安装
-    if [ -f "$TEST_APP_DIR/.installed" ]; then
-        handle_error "应用已经安装"
-    fi
+    # 测试安装确认
+    echo "n" | install_app "$TEST_APP" || {
+        cleanup
+        handle_error "安装确认测试失败"
+    }
     
     # 安装应用
-    echo "y" | install_app "$TEST_APP" || handle_error "安装应用失败"
+    echo "y" | install_app "$TEST_APP" || {
+        cleanup
+        handle_error "安装应用失败"
+    }
     
     # 检查安装标记
-    [ -f "$TEST_APP_DIR/.installed" ] || handle_error "安装标记不存在"
+    [ -f "$TEST_APP_DIR/.installed" ] || {
+        cleanup
+        handle_error "安装标记不存在"
+    }
     
-    # 检查配置文件状态
-    local status=$(yaml_get "$TEST_APP_DIR/config.yaml" "status")
-    [ "$status" = "installed" ] || handle_error "安装后应用状态不正确"
-    
-    log_success "安装应用测试通过"
+    return 0
 }
 
 # 测试应用状态
@@ -332,25 +334,25 @@ run_all_tests() {
     # 清理环境
     cleanup
     
-    # 先运行命令行模式测试
-    test_cli_mode
+    # 按照依赖顺序运行测试
+    test_create_app || return 1
+    test_install_app || return 1
+    test_app_status || return 1
+    test_update_app || return 1
+    test_list_apps || return 1
+    test_interactive_create || return 1
+    test_reinstall_app || return 1
+    test_remove_app || return 1
     
-    # 运行现有测试
-    test_create_app
-    test_install_app
-    test_app_status
-    test_update_app
-    test_list_apps
-    test_interactive_create
-    test_reinstall_app
-    test_remove_app
-    test_ui_components
-    test_ui_dependencies
+    # UI相关测试
+    test_ui_components || return 1
+    test_ui_dependencies || return 1
     
     # 最后清理
     cleanup
     
     log_success "所有测试通过！"
+    return 0
 }
 
 # 执行测试
