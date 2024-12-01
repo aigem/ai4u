@@ -56,14 +56,24 @@ main() {
     # 初始化系统
     source "$ROOT_DIR/lib/core/init.sh"
     
-    # 如果没有指定命令且UI可用，使用TUI模式
-    if [ -z "$COMMAND" ] && [ "$USE_BASIC_UI" != "true" ]; then
-        # 使用TUI界面
+    # 检查并安装UI依赖
+    check_ui_dependencies
+    
+    # 如果UI可用，使用TUI模式
+    if [ "$USE_BASIC_UI" != "true" ]; then
+        # 加载TUI组件
         source "$ROOT_DIR/lib/tui/enhanced_interface.sh"
-        handle_tui_mode "$@"
+        source "$ROOT_DIR/lib/tui/theme_manager.sh"
+        
+        # 设置主题
+        local theme=$(yaml_get "$CONFIG_DIR/settings.yaml" "ui.theme")
+        set_theme "${theme:-dark}"
+        
+        # 启动TUI界面
+        handle_tui_mode
     else
         # 使用基础命令行界面
-        handle_cli_mode "$@"
+        handle_cli_mode
     fi
 }
 
@@ -145,6 +155,38 @@ handle_cli_mode() {
             show_usage
             ;;
     esac
+}
+
+# 处理TUI模式
+handle_tui_mode() {
+    while true; do
+        choice=$(create_main_window)
+        case "$choice" in
+            "1")
+                # 安装新应用
+                app=$(show_app_browser)
+                if [ -n "$app" ]; then
+                    show_enhanced_progress "正在安装 $app..."
+                    install_app "$app"
+                fi
+                ;;
+            "2")
+                # 管理已安装应用
+                manage_installed_apps
+                ;;
+            "3")
+                # 系统设置
+                show_settings
+                ;;
+            "4")
+                # 查看日志
+                show_logs
+                ;;
+            "0"|"")
+                exit 0
+                ;;
+        esac
+    done
 }
 
 # 执行主程序

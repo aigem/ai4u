@@ -130,41 +130,36 @@ check_ui_dependencies() {
     # 检查whiptail
     if ! command -v whiptail >/dev/null 2>&1; then
         missing_deps+=("whiptail")
-    fi
-    
-    # 如果有缺失的依赖
-    if [ ${#missing_deps[@]} -gt 0 ]; then
-        log_info "检测到缺少UI组件: ${missing_deps[*]}"
+        log_info "检测到缺少UI组件: whiptail"
         
-        # 从配置文件读取自动安装设置
-        local auto_install
-        if [ -f "$CONFIG_DIR/settings.yaml" ]; then
-            auto_install=$(yaml_get "$CONFIG_DIR/settings.yaml" "ui.auto_install_deps")
-        fi
-        
-        # 检查是否可以自动安装
-        if [ "$auto_install" = "true" ]; then
-            log_info "正在自动安装UI组件..."
+        # 询问是否安装
+        read -p "是否安装whiptail？(y/n) " install_choice
+        if [[ $install_choice =~ ^[Yy]$ ]]; then
+            log_info "正在安装whiptail..."
             if [ -f /etc/debian_version ]; then
-                sudo apt-get update && sudo apt-get install -y "${missing_deps[@]}"
-                # 检查安装是否成功
-                if command -v whiptail >/dev/null 2>&1; then
-                    log_success "UI组件安装成功"
-                    return 0
-                fi
+                sudo apt-get update && sudo apt-get install -y whiptail
             elif [ -f /etc/redhat-release ]; then
-                sudo yum install -y "${missing_deps[@]}"
-                # 检查安装是否成功
-                if command -v whiptail >/dev/null 2>&1; then
-                    log_success "UI组件安装成功"
-                    return 0
-                fi
+                sudo yum install -y newt  # whiptail在RHEL系统中的包名是newt
+            else
+                log_error "不支持的系统类型，请手动安装whiptail"
+                export USE_BASIC_UI=true
+                return 1
             fi
+            
+            # 检查安装是否成功
+            if command -v whiptail >/dev/null 2>&1; then
+                log_success "whiptail 安装成功"
+                return 0
+            else
+                log_error "whiptail 安装失败"
+                export USE_BASIC_UI=true
+                return 1
+            fi
+        else
+            log_warn "用户取消安装whiptail，将使用基础命令行界面"
+            export USE_BASIC_UI=true
+            return 0
         fi
-        
-        # 如果安装失败或未启用自动安装
-        log_warn "UI组件不可用，将使用基础命令行界面"
-        export USE_BASIC_UI=true
     fi
     
     return 0
