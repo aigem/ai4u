@@ -213,6 +213,33 @@ test_remove_app() {
     log_success "移除应用测试通过"
 }
 
+# 添加UI测试
+test_ui_components() {
+    # 测试主窗口
+    test_main_window
+    
+    # 测试进度显示
+    test_progress_display
+    
+    # 测试主题切换
+    test_theme_switching
+}
+
+# 测试UI依赖检查
+test_ui_dependencies() {
+    log_info "测试UI依赖检查..."
+    
+    # 测试依赖检查
+    check_ui_dependencies || handle_error "UI依赖检查失败"
+    
+    # 测试whiptail可用性
+    if [ "$USE_BASIC_UI" != "true" ]; then
+        whiptail --version >/dev/null 2>&1 || handle_error "whiptail不可用"
+    fi
+    
+    log_success "UI依赖检查测试通过"
+}
+
 # 运行所有测试
 run_all_tests() {
     # 清理环境
@@ -227,6 +254,8 @@ run_all_tests() {
     test_interactive_create
     test_reinstall_app
     test_remove_app
+    test_ui_components
+    test_ui_dependencies
     
     # 最后清理
     cleanup

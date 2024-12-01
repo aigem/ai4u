@@ -155,9 +155,20 @@ init_system() {
     # 检查系统依赖
     check_dependencies
     
+    # 检查UI组件
+    check_ui_dependencies
+    
+    # 根据配置设置主题
+    if [ "$USE_BASIC_UI" != "true" ]; then
+        source "$ROOT_DIR/lib/tui/theme_manager.sh"
+        local theme=$(yaml_get "$CONFIG_DIR/settings.yaml" "ui.theme")
+        set_theme "${theme:-dark}"
+    fi
+    
     # 创建必需的目录
     mkdir -p "$APPS_DIR"
     mkdir -p "$CONFIG_DIR"
+    mkdir -p "$LOG_DIR"
 }
 
 # 检查是否为root用户
