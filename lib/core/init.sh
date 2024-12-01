@@ -23,7 +23,7 @@ for lib in \
     "$LIB_DIR/utils/validator.sh" \
     "$LIB_DIR/utils/yaml_parser.sh" \
     "$LIB_DIR/utils/yaml_utils.sh" \
-    "$LIB_DIR/utils/system_check.sh" \
+    "$LIB_DIR/utils/progress.sh" \
     "$LIB_DIR/core/app_manager.sh" \
     "$LIB_DIR/core/app_creator.sh" \
     "$LIB_DIR/core/step_executor.sh" \

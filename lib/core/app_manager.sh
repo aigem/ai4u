@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# 加载工具函数
+source "$ROOT_DIR/lib/utils/progress.sh"
+
 # 安装AI应用
 install_app() {
     local app_name="$1"
@@ -67,6 +70,9 @@ install_app() {
     ((current_step++))
     show_progress $current_step $total_steps "完成安装"
     touch "$app_dir/.installed"
+    
+    # 更新应用状态
+    update_yaml "$config_file" "status" "installed"
 
     show_success_message "$app_name"
     return 0
