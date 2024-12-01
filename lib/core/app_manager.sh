@@ -181,6 +181,13 @@ remove_app() {
     local app_name="$1"
     local app_dir="$APPS_DIR/$app_name"
 
+    #询问是否确认移除
+    read -p "确定要移除 $app_name 吗?(y/n) " confirm
+    if [[ $confirm != "y" ]]; then
+        log_info "取消移除 $app_name"
+        return 0
+    fi
+
     log_info "开始移除 $app_name..."
 
     # 检查应用是否存在
@@ -225,4 +232,51 @@ show_success_message() {
     echo "您现在可以开始使用了"
     echo "如需帮助，请查看文档"
     echo "=============================="
+}
+
+# 显示应用状态
+show_status() {
+    local app_name="$1"
+    local app_dir="$APPS_DIR/$app_name"
+
+    # 检查应用是否存在
+    if [ ! -d "$app_dir" ]; then
+        log_error "应用 $app_name 不存在"
+        return 1
+    fi
+
+    # 检查配置文件
+    local config_file="$app_dir/config.yaml"
+    if [ ! -f "$config_file" ]; then
+        log_error "应用 $app_name 的配置文件不存在"
+        return 1
+    }
+
+    # 读取配置信息
+    local app_type=$(yaml_get_value "$config_file" "type")
+    local app_version=$(yaml_get_value "$config_file" "version")
+    local app_command=$(yaml_get_value "$config_file" "command")
+
+    # 检查安装状态
+    local installed=false
+    if [ -f "$app_dir/.installed" ]; then
+        installed=true
+    fi
+
+    # 显示状态信息
+    echo "应用名称: $app_name"
+    echo "类型: $app_type"
+    echo "版本: $app_version"
+    echo "安装状态: $([ "$installed" = true ] && echo "已安装" || echo "未安装")"
+    
+    # 如果已安装，检查运行状态
+    if [ "$installed" = true ] && [ -n "$app_command" ]; then
+        if pgrep -f "$app_command" > /dev/null; then
+            echo "运行状态: 运行中"
+        else
+            echo "运行状态: 未运行"
+        fi
+    fi
+
+    return 0
 }
