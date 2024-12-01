@@ -225,12 +225,15 @@ test_interactive_create() {
     [ -d "$interactive_app_dir" ] && rm -rf "$interactive_app_dir"
     
     # 模拟用户输入
-    {
+    (
         echo "$interactive_app"  # 应用名称
+        sleep 0.1               # 添加短暂延迟确保输入顺序正确
         echo "1"                # 选择 web 类型 (1 对应 web)
+        sleep 0.1               # 添加短暂延迟
         echo "1.0.0"           # 版本号
+        sleep 0.1               # 添加短暂延迟
         echo "测试应用"         # 应用描述
-    } | create_app_interactive || {
+    ) | create_app_interactive || {
         # 确保在失败时也清理
         [ -d "$interactive_app_dir" ] && rm -rf "$interactive_app_dir"
         handle_error "交互式创建应用失败"
