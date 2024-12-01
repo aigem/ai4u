@@ -56,29 +56,162 @@ create_app_interactive() {
 create_app() {
     local app_name="$1"
     local app_type="$2"
-    local app_dir="$APPS_DIR/$app_name"
+    local app_version="${3:-1.0.0}"
+    local app_description="${4:-${app_name} 应用}"
     
-    # 检查应用是否已存在
-    if [ -d "$app_dir" ]; then
-        log_error "应用 $app_name 已存在"
+    # 验证必需参数
+    if [ -z "$app_name" ]; then
+        log_error "应用名称不能为空"
+        return 1
+    fi
+    
+    if [ -z "$app_type" ]; then
+        log_error "应用类型不能为空"
+        return 1
+    fi
+    
+    # 验证应用名称格式
+    if [[ ! $app_name =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        log_error "应用名称格式无效，只能包含字母、数字、下划线和连字符"
         return 1
     fi
     
     # 验证应用类型
     case "$app_type" in
-        web|cli|service|other)
-            ;;
+        web|cli|service|other) ;;
         *)
-            log_error "无效的应用类型：$app_type"
+            log_error "无效的应用类型：$app_type（有效类型：web|cli|service|other）"
             return 1
             ;;
     esac
     
-    # 创建应用结构
-    create_app_structure "$app_dir" "$app_name" "$app_type" "1.0.0" "自动创建的$app_type应用"
+    # 验证版本号格式
+    if [[ ! $app_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        log_error "版本号格式无效，请使用 x.y.z 格式（例如：1.0.0）"
+        return 1
+    fi
     
-    log_success "应用 $app_name 创建成功！"
-    show_next_steps "$app_name"
+    # 检查应用是否已存在
+    local app_dir="$APPS_DIR/$app_name"
+    if [ -d "$app_dir" ]; then
+        log_error "应用 '$app_name' 已存在"
+        return 1
+    fi
+    
+    # 创建应用结构
+    log_info "创建应用 '$app_name'..."
+    if ! create_app_structure "$app_dir" "$app_name" "$app_type" "$app_version" "$app_description"; then
+        log_error "创建应用结构失败"
+        return 1
+    fi
+    
+    # 创建示例配置文件
+    log_info "创建配置文件..."
+    if ! create_config_files "$app_dir" "$app_name" "$app_type" "$app_version" "$app_description"; then
+        log_error "创建配置文件失败"
+        return 1
+    fi
+    
+    # 创建必要的脚本
+    log_info "创建脚本文件..."
+    if ! create_script_files "$app_dir" "$app_name" "$app_type"; then
+        log_error "创建脚本文件失败"
+        return 1
+    fi
+    
+    # 设置文件权限
+    if ! set_permissions "$app_dir"; then
+        log_error "设置文件权限失败"
+        return 1
+    fi
+    
+    log_success "应用 '$app_name' 创建成功"
+    return 0
+}
+
+# 创建配置文件
+create_config_files() {
+    local app_dir="$1"
+    local app_name="$2"
+    local app_type="$3"
+    local app_version="$4"
+    local app_description="$5"
+    
+    # 创建主配置文件
+    cat > "$app_dir/config.yaml" << EOL
+name: $app_name
+type: $app_type
+version: $app_version
+description: $app_description
+status: not_installed
+install_time: 
+update_time: 
+EOL
+    
+    # 创建设置模板
+    cat > "$app_dir/config/settings.yaml.template" << EOL
+# $app_name 配置
+app:
+  name: $app_name
+  type: $app_type
+  version: $app_version
+  description: $app_description
+
+# 应用设置
+settings:
+  # 在此添加应用特定设置
+  example_setting: default_value
+
+# 环境变量
+environment:
+  # 在此添加需要的环境变量
+  # EXAMPLE_VAR: value
+
+# 依赖项
+dependencies:
+  # 在此添加依赖项
+  # - dependency1
+  # - dependency2
+EOL
+    
+    # 创建空的依赖文件
+    touch "$app_dir/requirements.txt"
+    
+    return 0
+}
+
+# 创建脚本文件
+create_script_files() {
+    local app_dir="$1"
+    local app_name="$2"
+    local app_type="$3"
+    
+    # 创建基本脚本
+    for script in install uninstall update status test; do
+        create_script "$app_dir" "$script" "$app_name" "$app_type"
+    done
+    
+    return 0
+}
+
+# 设置文件权限
+set_permissions() {
+    local app_dir="$1"
+    
+    # 设置目录权限
+    chmod 755 "$app_dir"
+    chmod 755 "$app_dir/scripts"
+    chmod 755 "$app_dir/config"
+    chmod 755 "$app_dir/data"
+    chmod 755 "$app_dir/logs"
+    
+    # 设置脚本执行权限
+    find "$app_dir/scripts" -type f -name "*.sh" -exec chmod 755 {} \;
+    
+    # 设置配置文件权限
+    chmod 644 "$app_dir/config.yaml"
+    chmod 644 "$app_dir/config/settings.yaml.template"
+    chmod 644 "$app_dir/requirements.txt"
     
     return 0
 }
@@ -86,6 +219,8 @@ create_app() {
 # 创建示例安装脚本
 create_install_script() {
     local app_dir="$1"
+    local app_name="$2"
+    local app_type="$3"
     local install_script="$app_dir/scripts/install.sh"
 
     cat > "$install_script" << 'EOF'
@@ -147,6 +282,7 @@ EOF
 # 创建示例测试脚本
 create_test_script() {
     local app_dir="$1"
+    local app_name="$2"
     local test_script="$app_dir/scripts/test.sh"
 
     cat > "$test_script" << 'EOF'
@@ -238,54 +374,55 @@ create_app_structure() {
     local app_version="$4"
     local app_description="$5"
     
-    # 创建目录结构
-    mkdir -p "$app_dir"
-    mkdir -p "$app_dir/scripts"
-    mkdir -p "$app_dir/config"
-    mkdir -p "$app_dir/data"
-    mkdir -p "$app_dir/logs"
+    # 确保父目录存在
+    if ! mkdir -p "$app_dir"; then
+        log_error "无法创建应用目录: $app_dir"
+        return 1
+    fi
+    
+    # 创建必要的子目录
+    for dir in "scripts" "config" "data" "logs"; do
+        if ! mkdir -p "$app_dir/$dir"; then
+            log_error "无法创建目录: $app_dir/$dir"
+            return 1
+        fi
+    done
+    
+    # 创建并设置权限
+    create_install_script "$app_dir" "$app_name" "$app_type"
+    create_test_script "$app_dir" "$app_name"
+    
+    # 设置脚本权限
+    find "$app_dir/scripts" -type f -name "*.sh" -exec chmod +x {} \;
     
     # 创建配置文件
-    cat > "$app_dir/config.yaml" << EOF
+    cat > "$app_dir/config.yaml" << EOL
 name: $app_name
 type: $app_type
 version: $app_version
 description: $app_description
 status: not_installed
-EOF
+install_time: 
+update_time: 
+EOL
     
-    # 创建配置模板
-    cat > "$app_dir/config/settings.yaml.template" << EOF
-# 应用配置模板
-app:
-  name: $app_name
-  type: $app_type
-  version: $app_version
+    # 创建示例配置模板
+    cat > "$app_dir/config/settings.yaml.template" << EOL
+# $app_name 配置模板
+app_name: $app_name
+version: $app_version
+type: $app_type
 
-# 自定义配置项
+# 应用特定配置
 settings:
-  # 在此添加自定义配置
-  example_setting: value
-EOF
+  # 在此添加应用配置项
+  example_setting: default_value
+EOL
     
-    # 创建空的依赖文件
+    # 创建空的requirements.txt
     touch "$app_dir/requirements.txt"
     
-    # 创建安装脚本
-    create_install_script "$app_dir"
-    
-    # 创建测试脚本
-    create_test_script "$app_dir"
-    
-    # 创建其他必要脚本
-    touch "$app_dir/scripts/uninstall.sh"
-    chmod +x "$app_dir/scripts/uninstall.sh"
-    
-    touch "$app_dir/scripts/update.sh"
-    chmod +x "$app_dir/scripts/update.sh"
-    
-    touch "$app_dir/scripts/status.sh"
-    chmod +x "$app_dir/scripts/status.sh"
+    return 0
 }
 
 # 显示下一步操作指引

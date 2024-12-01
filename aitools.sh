@@ -3,6 +3,64 @@
 # AI工具安装系统主入口脚本
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# 环境变量初始化和检查
+if [ -z "$ROOT_DIR" ]; then
+    export ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+
+export APPS_DIR="$ROOT_DIR/apps"
+export LIB_DIR="$ROOT_DIR/lib"
+export SCRIPTS_DIR="$ROOT_DIR/scripts"
+
+# 确保关键目录存在
+mkdir -p "$APPS_DIR"
+mkdir -p "$ROOT_DIR/logs"
+
+# 确保脚本有执行权限
+chmod +x "$ROOT_DIR/aitools.sh"
+find "$LIB_DIR" -type f -name "*.sh" -exec chmod +x {} \;
+
+# 检查操作系统类型
+check_os() {
+    case "$(uname -s)" in
+        CYGWIN*|MINGW*|MSYS*)
+            export OS_TYPE="windows"
+            ;;
+        Linux*)
+            export OS_TYPE="linux"
+            ;;
+        Darwin*)
+            export OS_TYPE="macos"
+            ;;
+        *)
+            export OS_TYPE="unknown"
+            ;;
+    esac
+}
+
+# 初始化环境
+init_environment() {
+    # 检查操作系统
+    check_os
+    
+    # Windows 环境特殊处理
+    if [ "$OS_TYPE" = "windows" ]; then
+        # 转换路径分隔符
+        ROOT_DIR=$(echo "$ROOT_DIR" | sed 's/\\/\//g')
+        APPS_DIR=$(echo "$APPS_DIR" | sed 's/\\/\//g')
+        
+        # 确保使用正确的解释器
+        if ! command -v bash &> /dev/null; then
+            echo "错误: 未找到 bash。请确保安装了 Git Bash 或 MSYS2。"
+            exit 1
+        fi
+    fi
+    
+    # 设置通用环境变量
+    export PATH="$ROOT_DIR/bin:$PATH"
+    export PYTHONPATH="$ROOT_DIR:$PYTHONPATH"
+}
+
 # 先加载日志工具
 source "$ROOT_DIR/lib/utils/logger.sh"
 
@@ -51,8 +109,14 @@ parse_arguments() {
 
 # 主函数
 main() {
-    # 初始化系统
-    source "$ROOT_DIR/lib/core/init.sh"
+    # 初始化环境
+    init_environment
+    
+    # 加载其他依赖
+    source "$ROOT_DIR/lib/utils/yaml_utils.sh"
+    
+    # 检查基本依赖
+    check_dependencies
     
     # 如果是测试命令，直接运行测试
     if [ "$COMMAND" = "test" ]; then

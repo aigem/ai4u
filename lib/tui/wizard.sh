@@ -6,6 +6,13 @@ show_creation_wizard() {
     echo "=== AI应用创建向导 ==="
     echo
 
+    # 检查目录权限
+    if [ ! -w "$APPS_DIR" ]; then
+        log_error "无法写入应用目录: $APPS_DIR"
+        log_error "请检查目录权限或以管理员身份运行"
+        return 1
+    }
+
     # 步骤1：基本信息
     echo "步骤1：基本信息"
     echo "---------------"
@@ -13,28 +20,49 @@ show_creation_wizard() {
     # 应用名称验证
     while true; do
         read -p "应用名称（字母、数字、下划线、连字符）: " name
-        if [[ $name =~ ^[a-zA-Z0-9_-]+$ ]]; then
-            break
-        else
-            echo "名称格式无效，请重试。"
+        
+        # 检查名称是否为空
+        if [ -z "$name" ]; then
+            echo "名称不能为空，请重试。"
+            continue
         fi
+        
+        # 检查名称格式
+        if [[ ! $name =~ ^[a-zA-Z0-9_-]+$ ]]; then
+            echo "名称格式无效，只能包含字母、数字、下划线和连字符。"
+            continue
+        fi
+        
+        # 检查名称长度
+        if [ ${#name} -gt 50 ]; then
+            echo "名称太长，请使用50个字符以内的名称。"
+            continue
+        fi
+        
+        # 检查是否已存在
+        if [ -d "$APPS_DIR/$name" ]; then
+            echo "应用 '$name' 已存在，请选择其他名称。"
+            continue
+        fi
+        
+        break
     done
 
     # 应用类型选择及说明
     echo -e "\n可用的应用类型："
-    echo "1. web - Web应用"
-    echo "2. cli - 命令行应用"
-    echo "3. service - 后台服务"
-    echo "4. other - 其他类型"
+    echo "1. web    - Web应用（网页界面）"
+    echo "2. cli    - 命令行应用（终端运行）"
+    echo "3. service- 后台服务（系统服务）"
+    echo "4. other  - 其他类型"
     
     while true; do
-        read -p "选择类型 (1-4): " type_choice
+        read -p "选择类型 [1-4]: " type_choice
         case $type_choice in
             1) type="web"; break;;
             2) type="cli"; break;;
             3) type="service"; break;;
             4) type="other"; break;;
-            *) echo "选择无效，请选择1-4。";;
+            *) echo "选择无效，请输入1-4之间的数字。";;
         esac
     done
 
@@ -44,66 +72,63 @@ show_creation_wizard() {
     
     # 版本号验证
     while true; do
-        read -p "版本号 (例如: 1.0.0): " version
+        read -p "版本号 [1.0.0]: " version
+        version=${version:-"1.0.0"}
+        
         if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             break
         else
-            echo "版本号格式无效，请使用 x.y.z 格式。"
+            echo "版本号格式无效，请使用 x.y.z 格式（例如：1.0.0）"
         fi
     done
 
-    # 应用描述
-    read -p "应用描述: " description
+    # 描述验证
+    while true; do
+        read -p "应用描述: " description
+        description=${description:-"$name 应用"}
+        
+        if [ ${#description} -gt 200 ]; then
+            echo "描述太长，请限制在200个字符以内。"
+            continue
+        fi
+        
+        break
+    done
 
-    # 步骤3：依赖项
-    echo -e "\n步骤3：依赖项"
-    echo "-------------"
-    local dependencies=()
-    read -p "您的应用是否需要特定的系统包？(y/n): " has_deps
-    if [[ $has_deps =~ ^[Yy]$ ]]; then
-        read -p "输入包名（用空格分隔）: " -a dependencies
-    fi
+    # 确认信息
+    echo -e "\n请确认以下信息："
+    echo "-------------------"
+    echo "应用名称: $name"
+    echo "应用类型: $type"
+    echo "版本号  : $version"
+    echo "描述    : $description"
+    echo
 
-    # 步骤4：环境设置
-    echo -e "\n步骤4：环境设置"
-    echo "-------------"
-    local env_vars=()
-    read -p "是否需要配置环境变量？(y/n): " has_env
-    if [[ $has_env =~ ^[Yy]$ ]]; then
-        echo "输入环境变量（格式：KEY=VALUE，每行一个，输入空行结束）："
-        while IFS= read -r line; do
-            [[ -z "$line" ]] && break
-            env_vars+=("$line")
-        done
+    read -p "确认创建应用？(y/n) " confirm
+    if [[ $confirm != [Yy]* ]]; then
+        echo "已取消创建应用。"
+        return 1
     fi
 
     # 创建应用
-    create_app_from_wizard "$name" "$type" "$version" "$description" "${dependencies[@]}" "${env_vars[@]}"
-    
-    # 显示下一步操作
-    show_next_steps "$name"
+    if create_app "$name" "$type" "$version" "$description"; then
+        echo
+        log_success "应用 '$name' 创建成功！"
+        show_next_steps "$name"
+        return 0
+    else
+        log_error "创建应用失败，请检查错误信息。"
+        return 1
+    fi
 }
 
 # 从向导输入创建应用
-create_app_from_wizard() {
+create_app() {
     local name="$1"
     local type="$2"
     local version="$3"
     local description="$4"
-    shift 4
-    local dependencies=()
-    local env_vars=()
     
-    # 分离依赖项和环境变量
-    while [ $# -gt 0 ]; do
-        if [[ "$1" == *"="* ]]; then
-            env_vars+=("$1")
-        else
-            dependencies+=("$1")
-        fi
-        shift
-    done
-
     # 创建应用配置目录
     local app_dir="$APPS_DIR/$name"
     if [ -d "$app_dir" ]; then
@@ -127,23 +152,6 @@ description: "$description"
 # 依赖项配置
 dependencies:
 EOL
-
-    # 添加依赖项
-    if [ ${#dependencies[@]} -gt 0 ]; then
-        for dep in "${dependencies[@]}"; do
-            echo "  - $dep" >> "$app_dir/config.yaml"
-        done
-    fi
-
-    # 添加环境变量
-    echo -e "\n# 环境变量配置\nenvironment:" >> "$app_dir/config.yaml"
-    if [ ${#env_vars[@]} -gt 0 ]; then
-        for env in "${env_vars[@]}"; do
-            local key="${env%%=*}"
-            local value="${env#*=}"
-            echo "  $key: \"$value\"" >> "$app_dir/config.yaml"
-        done
-    fi
 
     # 添加安装步骤
     cat >> "$app_dir/config.yaml" << EOL

@@ -9,73 +9,104 @@ install_app() {
     local app_dir="$APPS_DIR/$app_name"
     local config_file="$app_dir/config.yaml"
     local install_script="$app_dir/scripts/install.sh"
+    local settings_template="$app_dir/config/settings.yaml.template"
+    local settings_file="$app_dir/config/settings.yaml"
 
     log_info "开始安装 $app_name..."
 
-    # 显示欢迎信息
-    show_welcome_message "$app_name"
+    # 参数验证
+    if [ -z "$app_name" ]; then
+        log_error "应用名称不能为空"
+        return 1
+    fi
 
     # 检查应用是否存在
     if [ ! -d "$app_dir" ]; then
-        log_error "应用 $app_name 不存在，请先创建应用"
+        log_error "应用 '$app_name' 不存在，请先创建应用"
+        return 1
+    fi
+
+    # 检查必要文件
+    if [ ! -f "$config_file" ]; then
+        log_error "配置文件不存在: $config_file"
         return 1
     fi
 
     # 检查是否已安装
     if [ -f "$app_dir/.installed" ]; then
-        log_error "应用 $app_name 已经安装"
-        # 在非测试模式下询问确认
+        log_warn "应用 '$app_name' 已经安装"
         if [ "$TEST_MODE" != "true" ]; then
-            read -p "确定要重新安装吗?(y/n) " confirm
-            if [[ $confirm != "y" ]]; then
+            read -p "是否要重新安装？(y/n) " confirm
+            if [[ $confirm != [Yy]* ]]; then
                 log_info "取消重新安装"
                 return 0
             fi
         fi
+        log_info "准备重新安装..."
         rm -f "$app_dir/.installed"
     fi
 
-    # 检查安装前提条件
+    # 执行安装步骤并显示进度
+    local total_steps=5
+    local current_step=0
+
+    # 步骤1：检查前提条件
+    ((current_step++))
+    show_progress $current_step $total_steps "检查安装条件"
     if ! check_installation_prerequisites "$app_name"; then
         return 1
     fi
 
-    # 执行安装步骤并显示进度
-    local total_steps=4
-    local current_step=0
-
-    # 步骤1：安装依赖
+    # 步骤2：安装依赖
     ((current_step++))
     show_progress $current_step $total_steps "安装依赖项"
     if ! install_dependencies "$app_name"; then
         return 1
     fi
 
-    # 步骤2：配置环境
+    # 步骤3：配置环境
     ((current_step++))
     show_progress $current_step $total_steps "配置环境"
     if ! configure_environment "$app_name"; then
         return 1
     fi
 
-    # 步骤3：执行安装脚本
+    # 步骤4：执行安装脚本
     ((current_step++))
     show_progress $current_step $total_steps "执行安装脚本"
     if [ -f "$install_script" ]; then
-        if ! bash "$install_script"; then
-            log_error "安装脚本执行失败"
-            return 1
+        # Windows 环境处理
+        if [ "$OS_TYPE" = "windows" ]; then
+            # 确保使用 bash 执行脚本
+            if ! bash "$install_script"; then
+                log_error "安装脚本执行失败"
+                return 1
+            fi
+        else
+            if ! "$install_script"; then
+                log_error "安装脚本执行失败"
+                return 1
+            fi
         fi
+    else
+        log_warn "未找到安装脚本，跳过执行"
     fi
 
-    # 步骤4：标记为已安装
+    # 步骤5：完成安装
     ((current_step++))
     show_progress $current_step $total_steps "完成安装"
-    touch "$app_dir/.installed"
     
-    # 更新应用状态
+    # 创建配置文件（如果不存在）
+    if [ ! -f "$settings_file" ] && [ -f "$settings_template" ]; then
+        cp "$settings_template" "$settings_file"
+    fi
+    
+    # 更新安装状态
+    touch "$app_dir/.installed"
     update_yaml "$config_file" "status" "installed"
+    update_yaml "$config_file" "install_time" "$(date '+%Y-%m-%d %H:%M:%S')"
 
+    log_success "应用 '$app_name' 安装完成！"
     show_success_message "$app_name"
     return 0
 }
@@ -83,52 +114,80 @@ install_app() {
 # 安装依赖项
 install_dependencies() {
     local app_name="$1"
-    local config_file="$APPS_DIR/$app_name/config.yaml"
+    local app_dir="$APPS_DIR/$app_name"
+    local requirements_file="$app_dir/requirements.txt"
+    local config_file="$app_dir/config.yaml"
     
-    # 读取依赖项列表
-    local deps=($(yaml_get_array "$config_file" "dependencies"))
+    log_info "检查依赖项..."
     
-    if [ ${#deps[@]} -eq 0 ]; then
-        log_info "无需安装依赖项"
-        return 0
-    fi
-
-    log_info "安装依赖项：${deps[*]}"
-    for dep in "${deps[@]}"; do
-        if ! command -v "$dep" &> /dev/null; then
-            if ! apt-get install -y "$dep"; then
-                log_error "安装依赖项失败：$dep"
-                return 1
-            fi
+    # 检查 requirements.txt
+    if [ -f "$requirements_file" ] && [ -s "$requirements_file" ]; then
+        log_info "安装 Python 依赖..."
+        
+        # 检查 Python 环境
+        local python_cmd=""
+        if command -v python3 &> /dev/null; then
+            python_cmd="python3"
+        elif command -v python &> /dev/null; then
+            python_cmd="python"
+        else
+            log_error "未找到 Python 环境，请先安装 Python"
+            return 1
         fi
-    done
-
+        
+        # 检查 pip
+        local pip_cmd=""
+        if command -v pip3 &> /dev/null; then
+            pip_cmd="pip3"
+        elif command -v pip &> /dev/null; then
+            pip_cmd="pip"
+        else
+            log_error "未找到 pip，请先安装 pip"
+            return 1
+        fi
+        
+        # 安装依赖
+        if ! $pip_cmd install -r "$requirements_file"; then
+            log_error "安装 Python 依赖失败"
+            return 1
+        fi
+    else
+        log_info "未找到 Python 依赖文件或文件为空"
+    fi
+    
     return 0
 }
 
 # 配置环境变量
 configure_environment() {
     local app_name="$1"
-    local config_file="$APPS_DIR/$app_name/config.yaml"
-    local env_file="$APPS_DIR/$app_name/.env"
+    local app_dir="$APPS_DIR/$app_name"
+    local config_template="$app_dir/config/settings.yaml.template"
+    local config_file="$app_dir/config/settings.yaml"
     
-    # 读取环境变量配置
-    local env_vars=($(yaml_get_array "$config_file" "environment"))
-    
-    if [ ${#env_vars[@]} -eq 0 ]; then
-        log_info "无需配置环境变量"
-        return 0
+    # 如果配置文件已存在，询问是否覆盖
+    if [ -f "$config_file" ] && [ "$TEST_MODE" != "true" ]; then
+        read -p "配置文件已存在，是否覆盖？(y/n) " confirm
+        if [[ $confirm != "y" ]]; then
+            log_info "保留现有配置"
+            return 0
+        fi
     fi
-
-    # 创建环境变量文件
-    echo "# $app_name 环境变量配置" > "$env_file"
-    for env in "${env_vars[@]}"; do
-        echo "export $env" >> "$env_file"
-    done
     
-    # 设置权限
-    chmod 600 "$env_file"
-
+    # 复制配置模板
+    if [ -f "$config_template" ]; then
+        cp "$config_template" "$config_file" || {
+            log_error "创建配置文件失败"
+            return 1
+        }
+        log_info "已创建配置文件：$config_file"
+    fi
+    
+    # 设置环境变量
+    export APP_NAME="$app_name"
+    export APP_DIR="$app_dir"
+    export APP_CONFIG="$config_file"
+    
     return 0
 }
 
