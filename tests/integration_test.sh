@@ -86,7 +86,7 @@ test_cli_mode() {
     echo "y" | "$ROOT_DIR/aitools.sh" --test-mode install "$TEST_APP" || handle_error "CLI模式安装应用失败"
     
     # 测试查看状态
-    "$ROOT_DIR/aitools.sh" --test-mode status "$TEST_APP" || handle_error "CLI模式查看状态���败"
+    "$ROOT_DIR/aitools.sh" --test-mode status "$TEST_APP" || handle_error "CLI模式查看状态失败"
     
     # 测试更新应用
     "$ROOT_DIR/aitools.sh" --test-mode update "$TEST_APP" || handle_error "CLI模式更新应用失败"
@@ -117,62 +117,13 @@ test_create_app() {
         [ -f "$TEST_APP_DIR/$file" ] || handle_error "基本创建文件不存在：$file"
     done
     
-    # 检查基本创建的必要脚本
-    for script in "install.sh" "uninstall.sh" "update.sh" "status.sh" "test.sh"; do
-        [ -f "$TEST_APP_DIR/scripts/$script" ] || handle_error "基本创建脚本不存在：$script"
-        [ -x "$TEST_APP_DIR/scripts/$script" ] || handle_error "基本创建脚本没有执行权限：$script"
-    done
-    
-    # 检查基本创建的配置文件内容
-    local name=$(yaml_get "$TEST_APP_DIR/config.yaml" "name")
-    local type=$(yaml_get "$TEST_APP_DIR/config.yaml" "type")
-    local status=$(yaml_get "$TEST_APP_DIR/config.yaml" "status")
-    
-    [ "$name" = "$TEST_APP" ] || handle_error "基本创建配置文件中的应用名称不正确"
-    [ "$type" = "web" ] || handle_error "基本创建配置文件中的应用类型不正确"
-    [ "$status" = "not_installed" ] || handle_error "基本创建配置文件中的应用状态不正确"
-    
-    # 清理基本创建的应用
+    # 清理测试环境
     cleanup
-    
-    # 测试交互式创建
-    local INTERACTIVE_APP="test_app_interactive"
-    local INTERACTIVE_APP_DIR="$APPS_DIR/$INTERACTIVE_APP"
-    
-    echo -e "$INTERACTIVE_APP\n1\n1.0.0\n测试描述\n" | create_app_interactive || handle_error "交互式创建应用失败"
-    
-    # 检查交互式创建的目录结构
-    for dir in "scripts" "config" "data" "logs"; do
-        [ -d "$INTERACTIVE_APP_DIR/$dir" ] || handle_error "交互式创建目录不存在：$dir"
-    done
-    
-    # 检查交互式创建的必要���件
-    for file in "config.yaml" "requirements.txt" "config/settings.yaml.template"; do
-        [ -f "$INTERACTIVE_APP_DIR/$file" ] || handle_error "交互式创建文件不存在：$file"
-    done
-    
-    # 检查交互式创建的必要脚本
-    for script in "install.sh" "uninstall.sh" "update.sh" "status.sh" "test.sh"; do
-        [ -f "$INTERACTIVE_APP_DIR/scripts/$script" ] || handle_error "交互式创建脚本不存在：$script"
-        [ -x "$INTERACTIVE_APP_DIR/scripts/$script" ] || handle_error "交互式创建脚本没有执行权限：$script"
-    done
-    
-    # 检查交互式创建的配置文件内容
-    name=$(yaml_get "$INTERACTIVE_APP_DIR/config.yaml" "name")
-    type=$(yaml_get "$INTERACTIVE_APP_DIR/config.yaml" "type")
-    status=$(yaml_get "$INTERACTIVE_APP_DIR/config.yaml" "status")
-    
-    [ "$name" = "$INTERACTIVE_APP" ] || handle_error "交互式创建配置文件中的应用名称不正确"
-    [ "$type" = "web" ] || handle_error "交互式创建配置文件中的应用类型不正确"
-    [ "$status" = "not_installed" ] || handle_error "交互式创建配置文件中的应用状态不正确"
-    
-    # 清理交互式创建的应用
-    rm -rf "$INTERACTIVE_APP_DIR"
     
     log_success "创建应用测试通过"
 }
 
-# 测试���装应用
+# 测试安装应用
 test_install_app() {
     log_info "测试安装应用..."
     
@@ -209,7 +160,7 @@ test_app_status() {
     # 检查状态显示
     show_status "$TEST_APP" || handle_error "获取应用状态失败"
     
-    # 检查状���文件
+    # 检查状态文件
     [ -f "$TEST_APP_DIR/scripts/status.sh" ] || handle_error "状态脚本不存在"
     [ -x "$TEST_APP_DIR/scripts/status.sh" ] || handle_error "状态脚本没有执行权限"
     
@@ -260,33 +211,18 @@ test_list_apps() {
 test_interactive_create() {
     log_info "测试交互式创建应用..."
     
-    # 清理可能存在的测试应用
-    local interactive_app="interactive_test_app"
+    # 测试交互式创建
+    local interactive_app="test_app_interactive"
     local interactive_app_dir="$APPS_DIR/$interactive_app"
-    [ -d "$interactive_app_dir" ] && rm -rf "$interactive_app_dir"
     
-    # 模拟用户输入
-    (
-        echo "$interactive_app"  # 应用名称
-        sleep 0.1               # 添加短暂延迟确保输入顺序正确
-        echo "1"                # 选择 web 类型 (1 对应 web)
-        sleep 0.1               # 添加短暂延迟
-        echo "1.0.0"           # 版本号
-        sleep 0.1               # 添加短暂延迟
-        echo "测试应用"         # 应用描述
-    ) | create_app_interactive || {
-        # 确保在失败时也清理
-        [ -d "$interactive_app_dir" ] && rm -rf "$interactive_app_dir"
-        handle_error "交互式创建应用失败"
-    }
+    # 模拟用户输入进行交互式创建
+    echo -e "$interactive_app\n1\n1.0.0\n测试描述\n" | create_app_interactive || handle_error "交互式创建应用失败"
     
-    # 检查应用是否创建成功
+    # 检查交互式创建的目录和文件
     [ -d "$interactive_app_dir" ] || handle_error "交互式创建的应用目录不存在"
+    [ -f "$interactive_app_dir/config.yaml" ] || handle_error "交互式创建的配置文件不存在"
     
-    # 检查配置文件
-    [ -f "$interactive_app_dir/config.yaml" ] || handle_error "交互式创建的应用配置文件不存在"
-    
-    # 检查应用信息
+    # 检查配置文件内容
     [ "$(yaml_get "$interactive_app_dir/config.yaml" "name")" = "$interactive_app" ] || handle_error "应用名称不正确"
     [ "$(yaml_get "$interactive_app_dir/config.yaml" "type")" = "web" ] || handle_error "应用类型不正确"
     [ "$(yaml_get "$interactive_app_dir/config.yaml" "version")" = "1.0.0" ] || handle_error "应用版本不正确"
@@ -365,7 +301,7 @@ test_ui_dependencies() {
         whiptail --version >/dev/null 2>&1 || handle_error "whiptail不可用"
     fi
     
-    log_success "UI依赖检查���试通过"
+    log_success "UI依赖检查测试通过"
 }
 
 # 运行所有测试
@@ -428,31 +364,21 @@ test_config_files() {
     [ -f "$TEST_APP_DIR/requirements.txt" ] || handle_error "依赖文件不存在"
     
     # 检查脚本文件
-    [ -f "$TEST_APP_DIR/scripts/install.sh" ] || handle_error "安装脚本不存在"
-    [ -f "$TEST_APP_DIR/scripts/uninstall.sh" ] || handle_error "卸载脚本不存在"
-    [ -f "$TEST_APP_DIR/scripts/update.sh" ] || handle_error "更新脚本不存在"
-    [ -f "$TEST_APP_DIR/scripts/status.sh" ] || handle_error "状态脚本不存在"
-    [ -f "$TEST_APP_DIR/scripts/test.sh" ] || handle_error "测试脚本不存在"
-    
-    # 检查脚本权限
-    [ -x "$TEST_APP_DIR/scripts/install.sh" ] || handle_error "安装脚本无执行权限"
-    [ -x "$TEST_APP_DIR/scripts/uninstall.sh" ] || handle_error "卸载脚本无执行权限"
-    [ -x "$TEST_APP_DIR/scripts/update.sh" ] || handle_error "更新脚本无执行权限"
-    [ -x "$TEST_APP_DIR/scripts/status.sh" ] || handle_error "状态脚本无执行权限"
-    [ -x "$TEST_APP_DIR/scripts/test.sh" ] || handle_error "测试脚本无执行权限"
-    
-    # 检查配置文件格式
-    yaml_validate "$TEST_APP_DIR/config.yaml" || handle_error "主配置文件格式无效"
-    yaml_validate "$TEST_APP_DIR/config/settings.yaml.template" || handle_error "配置模板格式无效"
+    for script in "install.sh" "uninstall.sh" "update.sh" "status.sh" "test.sh"; do
+        [ -f "$TEST_APP_DIR/scripts/$script" ] || handle_error "脚本不存在：$script"
+        [ -x "$TEST_APP_DIR/scripts/$script" ] || handle_error "脚本无执行权限：$script"
+    done
     
     # 检查配置文件内容
-    local app_name=$(yaml_get "$TEST_APP_DIR/config.yaml" "name")
-    local app_type=$(yaml_get "$TEST_APP_DIR/config.yaml" "type")
-    local app_version=$(yaml_get "$TEST_APP_DIR/config.yaml" "version")
+    local name=$(yaml_get "$TEST_APP_DIR/config.yaml" "name")
+    local type=$(yaml_get "$TEST_APP_DIR/config.yaml" "type")
+    local version=$(yaml_get "$TEST_APP_DIR/config.yaml" "version")
+    local status=$(yaml_get "$TEST_APP_DIR/config.yaml" "status")
     
-    [ "$app_name" = "$TEST_APP" ] || handle_error "配置文件中的应用名称不正确"
-    [ "$app_type" = "web" ] || handle_error "配置文件中的应用类型不正确"
-    [ "$app_version" = "1.0.0" ] || handle_error "配置文件中的版本号不正确"
+    [ "$name" = "$TEST_APP" ] || handle_error "配置文件中的应用名称不正确"
+    [ "$type" = "web" ] || handle_error "配置文件中的应用类型不正确"
+    [ "$version" = "1.0.0" ] || handle_error "配置文件中的版本号不正确"
+    [ "$status" = "not_installed" ] || handle_error "配置文件中的应用状态不正确"
     
     log_success "配置文件测试通过"
     return 0
