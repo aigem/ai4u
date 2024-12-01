@@ -176,8 +176,8 @@ list_apps() {
             local app_name=$(basename "$app_dir")
             local config_file="$app_dir/config.yaml"
             if [ -f "$config_file" ]; then
-                local type=$(yaml_get_value "$config_file" "type")
-                local version=$(yaml_get_value "$config_file" "version")
+                local type=$(yaml_get "$config_file" "type")
+                local version=$(yaml_get "$config_file" "version")
                 printf "%-20s %-15s %s\n" "$app_name" "$type" "v$version"
             else
                 printf "%-20s %-15s %s\n" "$app_name" "未知" "配置缺失"
@@ -265,9 +265,9 @@ show_status() {
     fi
 
     # 读取配置信息
-    local app_type=$(yaml_get_value "$config_file" "type")
-    local app_version=$(yaml_get_value "$config_file" "version")
-    local app_command=$(yaml_get_value "$config_file" "command")
+    local app_type=$(yaml_get "$config_file" "type")
+    local app_version=$(yaml_get "$config_file" "version")
+    local app_command=$(yaml_get "$config_file" "command")
 
     # 检查安装状态
     local installed=false

@@ -22,26 +22,41 @@ show_creation_wizard() {
 
     # 应用类型选择及说明
     echo -e "\n可用的应用类型："
-    echo "1. text_generation  - 自然语言处理和文本生成"
-    echo "2. image_generation - AI驱动的图像创建和处理"
-    echo "3. speech_recognition - 语音转文字和音频处理"
-    echo "4. translation - 语言翻译和处理"
-    echo "5. other - 自定义AI应用类型"
+    echo "1. web - Web应用"
+    echo "2. cli - 命令行应用"
+    echo "3. service - 后台服务"
+    echo "4. other - 其他类型"
     
     while true; do
-        read -p "选择类型 (1-5): " type_choice
+        read -p "选择类型 (1-4): " type_choice
         case $type_choice in
-            1) type="text_generation"; break;;
-            2) type="image_generation"; break;;
-            3) type="speech_recognition"; break;;
-            4) type="translation"; break;;
-            5) type="other"; break;;
-            *) echo "选择无效，请选择1-5。";;
+            1) type="web"; break;;
+            2) type="cli"; break;;
+            3) type="service"; break;;
+            4) type="other"; break;;
+            *) echo "选择无效，请选择1-4。";;
         esac
     done
 
-    # 步骤2：依赖项
-    echo -e "\n步骤2：依赖项"
+    # 步骤2：版本和描述
+    echo -e "\n步骤2：版本和描述"
+    echo "-------------------"
+    
+    # 版本号验证
+    while true; do
+        read -p "版本号 (例如: 1.0.0): " version
+        if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            break
+        else
+            echo "版本号格式无效，请使用 x.y.z 格式。"
+        fi
+    done
+
+    # 应用描述
+    read -p "应用描述: " description
+
+    # 步骤3：依赖项
+    echo -e "\n步骤3：依赖项"
     echo "-------------"
     local dependencies=()
     read -p "您的应用是否需要特定的系统包？(y/n): " has_deps
@@ -49,8 +64,8 @@ show_creation_wizard() {
         read -p "输入包名（用空格分隔）: " -a dependencies
     fi
 
-    # 步骤3：环境设置
-    echo -e "\n步骤3：环境设置"
+    # 步骤4：环境设置
+    echo -e "\n步骤4：环境设置"
     echo "-------------"
     local env_vars=()
     read -p "是否需要配置环境变量？(y/n): " has_env
@@ -63,7 +78,7 @@ show_creation_wizard() {
     fi
 
     # 创建应用
-    create_app_from_wizard "$name" "$type" "${dependencies[@]}" "${env_vars[@]}"
+    create_app_from_wizard "$name" "$type" "$version" "$description" "${dependencies[@]}" "${env_vars[@]}"
     
     # 显示下一步操作
     show_next_steps "$name"
@@ -73,7 +88,9 @@ show_creation_wizard() {
 create_app_from_wizard() {
     local name="$1"
     local type="$2"
-    shift 2
+    local version="$3"
+    local description="$4"
+    shift 4
     local dependencies=()
     local env_vars=()
     
@@ -104,8 +121,8 @@ create_app_from_wizard() {
     cat > "$app_dir/config.yaml" << EOL
 name: $name
 type: $type
-version: 1.0.0
-description: "$type 类型的AI应用"
+version: $version
+description: "$description"
 
 # 依赖项配置
 dependencies:

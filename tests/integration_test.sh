@@ -153,10 +153,11 @@ test_interactive_create() {
     # 模拟用户输入
     {
         echo "$interactive_app"  # 应用名称
-        echo "1"                # 选择 text_generation 类型
-        echo "n"               # 不需要特定系统包
-        echo "测试应用"         # 应用描述
+        echo "1"                # 选择 web 类型
         echo "1.0.0"           # 版本号
+        echo "测试应用"         # 应用描述
+        echo "n"               # 不需要特定系统包
+        echo "n"               # 不需要环境变量
     } | create_app_interactive || handle_error "交互式创建应用失败"
     
     # 检查应用是否创建成功
@@ -167,7 +168,7 @@ test_interactive_create() {
     
     # 检查应用信息
     [ "$(yaml_get "$interactive_app_dir/config.yaml" "name")" = "$interactive_app" ] || handle_error "应用名称不正确"
-    [ "$(yaml_get "$interactive_app_dir/config.yaml" "type")" = "text_generation" ] || handle_error "应用类型不正确"
+    [ "$(yaml_get "$interactive_app_dir/config.yaml" "type")" = "web" ] || handle_error "应用类型不正确"
     [ "$(yaml_get "$interactive_app_dir/config.yaml" "version")" = "1.0.0" ] || handle_error "应用版本不正确"
     
     # 清理交互式测试应用
