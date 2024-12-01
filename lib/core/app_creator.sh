@@ -2,9 +2,47 @@
 
 # 交互式创建新应用
 create_app_interactive() {
-    log_info "启动应用创建向导..."
-    source ./lib/tui/wizard.sh
-    show_creation_wizard
+    local app_name="$1"
+    
+    if [ -z "$app_name" ]; then
+        read -p "请输入应用名称: " app_name
+    fi
+    
+    local app_dir="$APPS_DIR/$app_name"
+    
+    # 检查应用是否已存在
+    if [ -d "$app_dir" ]; then
+        log_error "应用 $app_name 已存在"
+        return 1
+    fi
+
+    # 选择应用类型
+    local app_type=""
+    case "$REPLY" in
+        1) app_type="web";;
+        2) app_type="cli";;
+        3) app_type="service";;
+        4) app_type="other";;
+        *) 
+            log_error "无效的选项：$REPLY"
+            return 1
+            ;;
+    esac
+
+    # 输入版本号
+    read -p "请输入版本号 [1.0.0]: " app_version
+    app_version=${app_version:-"1.0.0"}
+
+    # 输入描述
+    read -p "请输入应用描述: " app_description
+    
+    # 创建应用结构
+    create_app_structure "$app_dir" "$app_name" "$app_type" "$app_version" "$app_description"
+    
+    log_success "应用 $app_name 创建成功！"
+    show_next_steps "$app_name"
+    
+    return 0
 }
 
 # 使用指定参数创建新应用
@@ -260,49 +298,4 @@ show_next_steps() {
 3. 检查应用状态：
    ./aitools.sh status $app_name
 EOF
-}
-
-# 交互式创建应用
-create_app_interactive() {
-    local app_name="$1"
-    
-    if [ -z "$app_name" ]; then
-        read -p "请输入应用名称: " app_name
-    fi
-    
-    local app_dir="$APPS_DIR/$app_name"
-    
-    # 检查应用是否已存在
-    if [ -d "$app_dir" ]; then
-        log_error "应用 $app_name 已存在"
-        return 1
-    fi
-
-    # 选择应用类型
-    local app_type=""
-    local options=("web" "cli" "service" "other")
-    PS3="请选择应用类型 (1-4): "
-    select type in "${options[@]}"; do
-        if [[ -n "$type" ]]; then
-            app_type="$type"
-            break
-        else
-            echo "请选择有效的选项 1-4"
-        fi
-    done
-
-    # 输入版本号
-    read -p "请输入版本号 [1.0.0]: " app_version
-    app_version=${app_version:-"1.0.0"}
-
-    # 输入描述
-    read -p "请输入应用描述: " app_description
-    
-    # 创建应用结构
-    create_app_structure "$app_dir" "$app_name" "$app_type" "$app_version" "$app_description"
-    
-    log_success "应用 $app_name 创建成功！"
-    show_next_steps "$app_name"
-    
-    return 0
 }

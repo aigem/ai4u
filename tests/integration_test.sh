@@ -230,7 +230,11 @@ test_interactive_create() {
         echo "1"                # 选择 web 类型 (1 对应 web)
         echo "1.0.0"           # 版本号
         echo "测试应用"         # 应用描述
-    } | create_app_interactive || handle_error "交互式创建应用失败"
+    } | create_app_interactive || {
+        # 确保在失败时也清理
+        [ -d "$interactive_app_dir" ] && rm -rf "$interactive_app_dir"
+        handle_error "交互式创建应用失败"
+    }
     
     # 检查应用是否创建成功
     [ -d "$interactive_app_dir" ] || handle_error "交互式创建的应用目录不存在"
