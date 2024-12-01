@@ -27,6 +27,11 @@ case "$COMMAND" in
         if [ "$INTERACTIVE" = true ]; then
             create_app_interactive
         else
+            if [ -z "$APP_NAME" ] || [ -z "$APP_TYPE" ]; then
+                log_error "创建应用需要指定应用名称和类型"
+                show_usage
+                exit 1
+            fi
             create_app "$APP_NAME" "$APP_TYPE"
         fi
         ;;

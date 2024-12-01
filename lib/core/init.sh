@@ -34,12 +34,27 @@ parse_arguments() {
     APP_TYPE=""
     INTERACTIVE=false
 
+    # 第一个参数必须是命令
+    if [ $# -eq 0 ]; then
+        show_usage
+        exit 1
+    fi
+
+    case "$1" in
+        install|remove|update|status|list|create)
+            COMMAND="$1"
+            shift
+            ;;
+        *)
+            log_error "无效的命令：$1"
+            show_usage
+            exit 1
+            ;;
+    esac
+
+    # 解析剩余参数
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            install|remove|update|status|list|create)
-                COMMAND="$1"
-                shift
-                ;;
             --interactive)
                 INTERACTIVE=true
                 shift
