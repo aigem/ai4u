@@ -28,11 +28,19 @@ cleanup() {
     fi
 }
 
-# 错误处理
+# 改进错误处理
 handle_error() {
-    log_error "测试失败：$1"
+    local error_msg="$1"
+    local error_code="${2:-1}"
+    
+    log_error "测试失败：$error_msg"
+    log_info "错误详情："
+    log_info "- 测试应用：$TEST_APP"
+    log_info "- 应用目录：$TEST_APP_DIR"
+    log_info "- 错误代码：$error_code"
+    
     cleanup
-    exit 1
+    exit "$error_code"
 }
 
 # 测试命令行模式
@@ -139,26 +147,16 @@ test_create_app() {
 test_install_app() {
     log_info "测试安装应用..."
     
-    # 先创建测试应用
+    # 创建测试应用
     create_app "$TEST_APP" "web" || handle_error "创建测试应用失败"
     
-    # 测试安装确认
-    echo "n" | install_app "$TEST_APP" || {
-        cleanup
-        handle_error "安装确认测试失败"
-    }
+    # 测试首次安装
+    echo "y" | install_app "$TEST_APP" || handle_error "首次安装失败"
+    [ -f "$TEST_APP_DIR/.installed" ] || handle_error "安装标记不存在"
     
-    # 安装应用
-    echo "y" | install_app "$TEST_APP" || {
-        cleanup
-        handle_error "安装应用失败"
-    }
-    
-    # 检查安装标记
-    [ -f "$TEST_APP_DIR/.installed" ] || {
-        cleanup
-        handle_error "安装标记不存在"
-    }
+    # 测试重复安装（应该提示已安装）
+    output=$(echo "n" | install_app "$TEST_APP" 2>&1)
+    echo "$output" | grep -q "已安装" || handle_error "重复安装检查失败"
     
     return 0
 }
@@ -374,4 +372,37 @@ test_config_files() {
     
     # 测试应用配置
     [ -f "$TEST_APP_DIR/config/settings.yaml.template" ] || handle_error "应用配置模板不存在"
+}
+
+# 创建示例测试脚本时不需要再进行完整测试
+create_test_script() {
+    local app_dir="$1"
+    local test_script="$app_dir/scripts/test.sh"
+
+    cat > "$test_script" << 'EOF'
+#!/bin/bash
+
+# 简化版测试脚本
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_DIR="$(dirname "$SCRIPT_DIR")"
+
+# 基本检查
+basic_check() {
+    # 检查必要目录
+    [ -d "$APP_DIR/config" ] || exit 1
+    [ -d "$APP_DIR/data" ] || exit 1
+    [ -d "$APP_DIR/logs" ] || exit 1
+    
+    # 检查必要文件
+    [ -f "$APP_DIR/config/settings.yaml" ] || exit 1
+    [ -f "$APP_DIR/requirements.txt" ] || exit 1
+    
+    return 0
+}
+
+# 执行基本检查
+basic_check
+EOF
+
+    chmod +x "$test_script"
 }
