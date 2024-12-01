@@ -24,6 +24,61 @@ parse_arguments() {
     done
 }
 
+# 处理TUI模式
+handle_tui_mode() {
+    while true; do
+        choice=$(create_main_window)
+        case "$choice" in
+            "1")
+                show_app_browser
+                ;;
+            "2")
+                manage_installed_apps
+                ;;
+            "3")
+                show_settings
+                ;;
+            "4")
+                show_logs
+                ;;
+            "0"|"")
+                exit 0
+                ;;
+        esac
+    done
+}
+
+# 处理命令行模式
+handle_cli_mode() {
+    case "$COMMAND" in
+        "install")
+            install_app "$APP_NAME"
+            ;;
+        "remove")
+            remove_app "$APP_NAME"
+            ;;
+        "update")
+            update_app "$APP_NAME"
+            ;;
+        "status")
+            show_status "$APP_NAME"
+            ;;
+        "list")
+            list_apps
+            ;;
+        "create")
+            if [ "$INTERACTIVE" = true ]; then
+                create_app_interactive
+            else
+                create_app "$APP_NAME" "$APP_TYPE"
+            fi
+            ;;
+        *)
+            show_usage
+            ;;
+    esac
+}
+
 # 主函数
 main() {
     # 初始化系统

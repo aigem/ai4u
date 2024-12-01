@@ -24,6 +24,7 @@ for lib in \
     "$LIB_DIR/utils/yaml_parser.sh" \
     "$LIB_DIR/utils/yaml_utils.sh" \
     "$LIB_DIR/utils/progress.sh" \
+    "$LIB_DIR/utils/system_check.sh" \
     "$LIB_DIR/core/app_manager.sh" \
     "$LIB_DIR/core/app_creator.sh" \
     "$LIB_DIR/core/step_executor.sh" \
@@ -189,6 +190,9 @@ check_dependencies() {
         fi
     done
 }
+
+# 设置日志目录
+LOG_DIR="$ROOT_DIR/logs"
 
 # 初始化系统
 init_system

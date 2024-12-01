@@ -132,34 +132,24 @@ check_ui_dependencies() {
         missing_deps+=("whiptail")
     fi
     
-    # 检查dialog（可选依赖）
-    if ! command -v dialog >/dev/null 2>&1; then
-        missing_deps+=("dialog")
-    fi
-    
-    # 如果有缺失的依赖，询问是否安装
+    # 如果有缺失的依赖
     if [ ${#missing_deps[@]} -gt 0 ]; then
         log_info "检测到缺少UI组件: ${missing_deps[*]}"
         
-        if [ "$AUTO_INSTALL_DEPS" = "true" ] || \
-           whiptail --title "缺少依赖" \
-                   --yesno "是否安装缺失的UI组件？\n${missing_deps[*]}" \
-                   10 60; then
-            
-            log_info "正在安装UI组件..."
+        # 检查是否可以自动安装
+        if [ "$AUTO_INSTALL_DEPS" = "true" ]; then
+            log_info "正在自动安装UI组件..."
             if [ -f /etc/debian_version ]; then
-                # Debian/Ubuntu系统
-                sudo apt-get update
-                sudo apt-get install -y "${missing_deps[@]}"
+                sudo apt-get update && sudo apt-get install -y "${missing_deps[@]}"
             elif [ -f /etc/redhat-release ]; then
-                # RHEL/CentOS系统
                 sudo yum install -y "${missing_deps[@]}"
             else
-                log_error "不支持的系统类型，请手动安装: ${missing_deps[*]}"
-                return 1
+                log_warn "不支持的系统类型，将使用基础命令行界面"
+                export USE_BASIC_UI=true
+                return 0
             fi
         else
-            log_warn "用户取消安装UI组件，将使用基础命令行界面"
+            log_warn "未启用自动安装，将使用基础命令行界面"
             export USE_BASIC_UI=true
             return 0
         fi
