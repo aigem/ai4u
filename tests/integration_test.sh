@@ -227,11 +227,9 @@ test_interactive_create() {
     # 模拟用户输入
     {
         echo "$interactive_app"  # 应用名称
-        echo "1"                # 选择 web 类型
+        echo "1"                # 选择 web 类型 (1 对应 web)
         echo "1.0.0"           # 版本号
         echo "测试应用"         # 应用描述
-        echo "n"               # 不需要特定系统包
-        echo "n"               # 不需要环境变量
     } | create_app_interactive || handle_error "交互式创建应用失败"
     
     # 检查应用是否创建成功
