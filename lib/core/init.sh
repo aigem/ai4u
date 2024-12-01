@@ -98,6 +98,7 @@ parse_arguments() {
         create)
             if [ "$INTERACTIVE" = false ] && [ -z "$APP_NAME" ]; then
                 log_error "非交互式创建需要提供应用名称"
+                show_usage
                 exit 1
             fi
             if [ "$INTERACTIVE" = false ] && [ -z "$APP_TYPE" ]; then
