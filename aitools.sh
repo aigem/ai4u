@@ -4,6 +4,17 @@
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 source "$SCRIPT_DIR/lib/core/init.sh"
 
+# 运行测试
+run_tests() {
+    if [ -f "$SCRIPT_DIR/tests/integration_test.sh" ]; then
+        log_info "运行集成测试..."
+        bash "$SCRIPT_DIR/tests/integration_test.sh"
+    else
+        log_error "未找到测试脚本"
+        return 1
+    fi
+}
+
 # 解析命令行参数
 parse_arguments "$@"
 
@@ -35,6 +46,9 @@ case "$COMMAND" in
             fi
             create_app "$APP_NAME" "$APP_TYPE"
         fi
+        ;;
+    "test")
+        run_tests
         ;;
     *)
         show_usage

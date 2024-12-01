@@ -9,54 +9,33 @@ create_app_interactive() {
 
 # 使用指定参数创建新应用
 create_app() {
-    local name="$1"
-    local type="$2"
-
-    if [ -z "$name" ] || [ -z "$type" ]; then
-        log_error "应用名称和类型是必需的"
+    local app_name="$1"
+    local app_type="$2"
+    local app_dir="$APPS_DIR/$app_name"
+    
+    # 检查应用是否已存在
+    if [ -d "$app_dir" ]; then
+        log_error "应用 $app_name 已存在"
         return 1
     fi
-
+    
     # 验证应用类型
-    case "$type" in
-        text_generation|image_generation|speech_recognition|translation|other)
+    case "$app_type" in
+        web|cli|service|other)
             ;;
         *)
-            log_error "无效的应用类型：$type"
+            log_error "无效的应用类型：$app_type"
             return 1
             ;;
     esac
-
-    # 创建应用目录
-    local app_dir="$APPS_DIR/$name"
-    if [ -d "$app_dir" ]; then
-        log_error "应用已存在：$name"
-        return 1
-    fi
-
-    mkdir -p "$app_dir"
-
-    # 复制并更新配置
-    cp "$TEMPLATES_DIR/app_configs/base.yaml" "$app_dir/config.yaml"
-    update_yaml "$app_dir/config.yaml" "name" "$name"
-    update_yaml "$app_dir/config.yaml" "type" "$type"
-    update_yaml "$app_dir/config.yaml" "version" "1.0.0"
-
-    # 创建其他必需文件
-    touch "$app_dir/status.sh"
-    chmod +x "$app_dir/status.sh"
-
-    log_success "应用创建成功：$name"
-    return 0
-}
-
-# 创建应用
-create_app() {
-    local app_name="$1"
-    local app_type="$2"
     
-    source "$LIB_DIR/tui/wizard.sh"
-    create_app_interactive "$app_name"
+    # 创建应用结构
+    create_app_structure "$app_dir" "$app_name" "$app_type" "1.0.0" "自动创建的$app_type应用"
+    
+    log_success "应用 $app_name 创建成功！"
+    show_next_steps "$app_name"
+    
+    return 0
 }
 
 # 创建示例安装脚本

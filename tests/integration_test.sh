@@ -14,6 +14,7 @@ TEST_APP="test_app"
 cleanup() {
     log_info "清理测试环境..."
     rm -rf "$ROOT_DIR/apps/$TEST_APP"
+    rm -f "$SCRIPT_DIR/test_input.txt"
 }
 
 # 错误处理
@@ -27,15 +28,13 @@ handle_error() {
 test_create_app() {
     log_info "测试创建应用..."
     
-    # 准备输入数据
+    # 准备输入数据（用于描述输入）
     cat << EOF > "$SCRIPT_DIR/test_input.txt"
-1
-1.0.0
 测试应用
 EOF
     
-    # 创建应用
-    bash "$ROOT_DIR/aitools.sh" create "$TEST_APP" < "$SCRIPT_DIR/test_input.txt" || handle_error "创建应用失败"
+    # 创建应用（使用非交互模式）
+    bash "$ROOT_DIR/aitools.sh" create "$TEST_APP" --type web || handle_error "创建应用失败"
     
     # 检查目录结构
     for dir in "scripts" "config" "data" "logs"; do

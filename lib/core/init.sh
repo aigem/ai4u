@@ -56,7 +56,7 @@ parse_arguments() {
     fi
 
     case "$1" in
-        install|remove|update|status|list|create)
+        install|remove|update|status|list|create|test)
             COMMAND="$1"
             shift
             ;;
@@ -68,33 +68,35 @@ parse_arguments() {
     esac
 
     # 解析剩余参数
-    while [[ $# -gt 0 ]]; do
+    while [ $# -gt 0 ]; do
         case "$1" in
-            --interactive)
+            --interactive|-i)
                 INTERACTIVE=true
                 shift
                 ;;
-            --type)
+            --type|-t)
+                if [ -z "$2" ]; then
+                    log_error "缺少应用类型参数"
+                    exit 1
+                fi
                 APP_TYPE="$2"
                 shift 2
                 ;;
             *)
                 if [ -z "$APP_NAME" ]; then
                     APP_NAME="$1"
+                else
+                    log_error "未知的参数：$1"
+                    show_usage
+                    exit 1
                 fi
                 shift
                 ;;
         esac
     done
 
-    # 验证参数
+    # 检查命令特定的参数要求
     case "$COMMAND" in
-        install|remove|update|status)
-            if [ -z "$APP_NAME" ]; then
-                log_error "执行 $COMMAND 命令需要提供应用名称"
-                exit 1
-            fi
-            ;;
         create)
             if [ "$INTERACTIVE" = false ] && [ -z "$APP_NAME" ]; then
                 log_error "非交互式创建需要提供应用名称"
@@ -107,33 +109,38 @@ parse_arguments() {
                 exit 1
             fi
             ;;
+        install|remove|update|status)
+            if [ -z "$APP_NAME" ]; then
+                log_error "命令 $COMMAND 需要提供应用名称"
+                show_usage
+                exit 1
+            fi
+            ;;
     esac
 }
 
 # 显示使用说明
 show_usage() {
-    cat << EOF
-使用方法: ./aitools.sh <命令> [选项]
-
-命令:
-  install <应用>              安装AI应用
-  remove <应用>              移除AI应用
-  update <应用>              更新AI应用
-  status <应用>              显示应用状态
-  list                      列出所有已安装的应用
-  create [选项] <应用>        创建新应用
-
-创建选项:
-  --interactive            交互式创建应用
-  --type <类型>           指定应用类型
-
-应用类型:
-  - text_generation       文本生成
-  - image_generation      图像生成
-  - speech_recognition    语音识别
-  - translation          翻译
-  - other               其他类型
-EOF
+    echo "使用方法: $(basename "$0") <命令> [选项] [应用名称]"
+    echo
+    echo "命令:"
+    echo "  create     创建新应用"
+    echo "  install    安装应用"
+    echo "  remove     移除应用"
+    echo "  update     更新应用"
+    echo "  status     查看应用状态"
+    echo "  list       列出所有应用"
+    echo "  test       运行测试"
+    echo
+    echo "选项:"
+    echo "  -i, --interactive    交互式模式"
+    echo "  -t, --type TYPE      指定应用类型 (web|cli|service|other)"
+    echo
+    echo "示例:"
+    echo "  $(basename "$0") create myapp --type web     # 创建Web应用"
+    echo "  $(basename "$0") create --interactive        # 交互式创建应用"
+    echo "  $(basename "$0") install myapp              # 安装应用"
+    echo "  $(basename "$0") test                       # 运行所有测试"
 }
 
 # 初始化系统
