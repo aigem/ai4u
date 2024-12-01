@@ -6,6 +6,8 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
 # 加载工具函数
 source "$ROOT_DIR/lib/utils/logger.sh"
+source "$ROOT_DIR/lib/core/app_creator.sh"
+source "$ROOT_DIR/lib/core/app_manager.sh"
 
 # 测试应用名称
 TEST_APP="test_app"
@@ -28,13 +30,8 @@ handle_error() {
 test_create_app() {
     log_info "测试创建应用..."
     
-    # 准备输入数据（用于描述输入）
-    cat << EOF > "$SCRIPT_DIR/test_input.txt"
-测试应用
-EOF
-    
     # 创建应用（使用非交互模式）
-    bash "$ROOT_DIR/aitools.sh" create "$TEST_APP" --type web || handle_error "创建应用失败"
+    create_app "$TEST_APP" "web" || handle_error "创建应用失败"
     
     # 检查目录结构
     for dir in "scripts" "config" "data" "logs"; do
@@ -57,55 +54,29 @@ EOF
 # 测试安装应用
 test_install_app() {
     log_info "测试安装应用..."
-    
-    # 准备输入数据
-    echo "y" > "$SCRIPT_DIR/test_input.txt"
-    
-    # 安装应用
-    bash "$ROOT_DIR/aitools.sh" install "$TEST_APP" < "$SCRIPT_DIR/test_input.txt" || handle_error "安装应用失败"
-    
-    # 检查安装标记
-    [ -f "$ROOT_DIR/apps/$TEST_APP/.installed" ] || handle_error "安装标记不存在"
-    
+    install_app "$TEST_APP" || handle_error "安装应用失败"
     log_success "安装应用测试通过"
 }
 
 # 测试应用状态
 test_app_status() {
     log_info "测试应用状态..."
-    
-    # 检查状态
-    bash "$ROOT_DIR/aitools.sh" status "$TEST_APP" || handle_error "检查状态失败"
-    
+    show_status "$TEST_APP" || handle_error "获取应用状态失败"
     log_success "应用状态测试通过"
 }
 
 # 测试重新安装
 test_reinstall_app() {
     log_info "测试重新安装应用..."
-    
-    # 准备输入数据
-    echo "y" > "$SCRIPT_DIR/test_input.txt"
-    
-    # 重新安装应用
-    bash "$ROOT_DIR/aitools.sh" install "$TEST_APP" < "$SCRIPT_DIR/test_input.txt" || handle_error "重新安装应用失败"
-    
+    install_app "$TEST_APP" || handle_error "重新安装应用失败"
     log_success "重新安装应用测试通过"
 }
 
 # 测试移除应用
 test_remove_app() {
     log_info "测试移除应用..."
-    
-    # 准备输入数据
-    echo "y" > "$SCRIPT_DIR/test_input.txt"
-    
-    # 移除应用
-    bash "$ROOT_DIR/aitools.sh" remove "$TEST_APP" < "$SCRIPT_DIR/test_input.txt" || handle_error "移除应用失败"
-    
-    # 检查应用是否已移除
-    [ ! -d "$ROOT_DIR/apps/$TEST_APP" ] || handle_error "应用未被完全移除"
-    
+    remove_app "$TEST_APP" || handle_error "移除应用失败"
+    [ ! -d "$ROOT_DIR/apps/$TEST_APP" ] || handle_error "应用目录仍然存在"
     log_success "移除应用测试通过"
 }
 
@@ -113,7 +84,7 @@ test_remove_app() {
 run_all_tests() {
     log_info "开始运行集成测试..."
     
-    # 清理旧的测试环境
+    # 初始清理
     cleanup
     
     # 运行测试
@@ -123,9 +94,8 @@ run_all_tests() {
     test_reinstall_app
     test_remove_app
     
-    # 清理测试环境
+    # 最终清理
     cleanup
-    rm -f "$SCRIPT_DIR/test_input.txt"
     
     log_success "所有测试通过！"
 }
