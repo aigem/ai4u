@@ -163,24 +163,64 @@ handle_tui_mode() {
         choice=$(create_main_window)
         case "$choice" in
             "1")
-                # 安装新应用
+                # 创建新应用
+                source "$ROOT_DIR/lib/tui/interactive_wizard.sh"
+                create_app_wizard
+                ;;
+            "2")
+                # 安装应用
                 app=$(show_app_browser)
                 if [ -n "$app" ]; then
                     show_enhanced_progress "正在安装 $app..."
                     install_app "$app"
                 fi
                 ;;
-            "2")
-                # 管理已安装应用
-                manage_installed_apps
-                ;;
             "3")
-                # 系统设置
-                show_settings
+                # 卸载应用
+                local installed_apps=($(ls -1 "$APPS_DIR"))
+                if [ ${#installed_apps[@]} -eq 0 ]; then
+                    whiptail --msgbox "没有已安装的应用" 10 40
+                    continue
+                fi
+                local app=$(whiptail --menu "选择要卸载的应用" 20 60 10 \
+                    "${installed_apps[@]}" 3>&1 1>&2 2>&3)
+                if [ -n "$app" ]; then
+                    if whiptail --yesno "确定要卸载 $app 吗？" 10 40; then
+                        show_enhanced_progress "正在卸载 $app..."
+                        remove_app "$app"
+                    fi
+                fi
                 ;;
             "4")
-                # 查看日志
-                show_logs
+                # 更新应用
+                local installed_apps=($(ls -1 "$APPS_DIR"))
+                if [ ${#installed_apps[@]} -eq 0 ]; then
+                    whiptail --msgbox "没有已安装的应用" 10 40
+                    continue
+                fi
+                local app=$(whiptail --menu "选择要更新的应用" 20 60 10 \
+                    "${installed_apps[@]}" 3>&1 1>&2 2>&3)
+                if [ -n "$app" ]; then
+                    show_enhanced_progress "正在更新 $app..."
+                    update_app "$app"
+                fi
+                ;;
+            "5")
+                # 查看状态
+                local installed_apps=($(ls -1 "$APPS_DIR"))
+                if [ ${#installed_apps[@]} -eq 0 ]; then
+                    whiptail --msgbox "没有已安装的应用" 10 40
+                    continue
+                fi
+                local app=$(whiptail --menu "选择要查看的应用" 20 60 10 \
+                    "${installed_apps[@]}" 3>&1 1>&2 2>&3)
+                if [ -n "$app" ]; then
+                    show_status "$app" | whiptail --scrolltext --title "应用状态" --textbox /dev/stdin 20 60
+                fi
+                ;;
+            "6")
+                # 列出应用
+                list_apps | whiptail --scrolltext --title "应用列表" --textbox /dev/stdin 20 60
                 ;;
             "0"|"")
                 exit 0
