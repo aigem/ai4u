@@ -14,7 +14,7 @@ install_app() {
     # 安装前检查
     if ! check_installation_prerequisites "$app_name"; then
         return 1
-    }
+    fi
 
     # 创建临时工作目录
     local workspace=$(mktemp -d)
@@ -53,25 +53,23 @@ install_app() {
 # 显示欢迎信息
 show_welcome_message() {
     local app_name="$1"
-    clear
-    echo "=== 正在安装 $app_name ==="
-    echo "本向导将引导您完成安装过程。"
-    echo "随时可以按 Ctrl+C 取消安装。"
-    echo
-    read -p "按回车键继续..."
+    echo "=============================="
+    echo "  AI工具安装系统"
+    echo "=============================="
+    echo "准备安装：$app_name"
+    echo "请确保您有足够的系统权限"
+    echo "安装过程中请勿关闭终端"
+    echo "=============================="
 }
 
 # 显示成功信息
 show_success_message() {
     local app_name="$1"
-    echo
-    echo "🎉 安装完成！"
-    echo "-------------------------"
-    echo "应用 '$app_name' 已成功安装。"
-    echo
-    echo "开始使用："
-    echo "1. 检查状态：./aitools.sh status $app_name"
-    echo "2. 查看日志：cat apps/$app_name/logs/install.log"
-    echo
-    echo "如需帮助和文档，请查看 README.md"
+    echo "=============================="
+    echo "  安装成功"
+    echo "=============================="
+    echo "应用：$app_name 已成功安装"
+    echo "您现在可以开始使用了"
+    echo "如需帮助，请查看文档"
+    echo "=============================="
 }

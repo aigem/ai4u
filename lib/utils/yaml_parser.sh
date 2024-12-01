@@ -8,7 +8,7 @@ parse_yaml() {
     if [ ! -f "$yaml_file" ]; then
         log_error "未找到YAML文件：$yaml_file"
         return 1
-    }
+    fi
 
     # 使用Python解析YAML（比纯bash更可靠）
     python3 -c '
@@ -44,12 +44,16 @@ yaml_get_value() {
     local yaml_file="$1"
     local key="$2"
     
+    if [ ! -f "$yaml_file" ]; then
+        log_error "未找到YAML文件：$yaml_file"
+        return 1
+    fi
+    
     python3 -c "
 import yaml
 with open('$yaml_file') as f:
-    data = yaml.safe_load(f)
-    print(data.get('$key', ''))
-"
+    print(yaml.safe_load(f).get('$key', ''))
+    "
 }
 
 # 检查YAML文件中是否存在字段
@@ -57,10 +61,11 @@ yaml_has_field() {
     local yaml_file="$1"
     local field="$2"
     
-    python3 -c "
-import yaml
-with open('$yaml_file') as f:
-    data = yaml.safe_load(f)
-    exit(0 if '$field' in data else 1)
-"
+    if [ ! -f "$yaml_file" ]; then
+        log_error "未找到YAML文件：$yaml_file"
+        return 1
+    fi
+    
+    local value=$(yaml_get_value "$yaml_file" "$field")
+    [ -n "$value" ]
 }

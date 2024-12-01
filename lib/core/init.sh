@@ -105,7 +105,7 @@ EOF
 
 # 初始化系统
 init_system() {
-    check_root_user
+    # check_root_user
     check_system_requirements || exit 1
     load_settings
     check_dependencies

@@ -7,14 +7,14 @@ validate_app_config() {
     if [ ! -f "$config_file" ]; then
         log_error "未找到配置文件：$config_file"
         return 1
-    }
+    fi
 
     # 加载验证规则
     local validator_file="$TEMPLATES_DIR/validators/base.yaml"
     if [ ! -f "$validator_file" ]; then
         log_error "未找到验证规则文件"
         return 1
-    }
+    fi
 
     # 验证必需字段
     local required_fields=(name type version cmd)
