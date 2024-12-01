@@ -292,3 +292,63 @@ show_status() {
 
     return 0
 }
+
+# 更新AI应用
+update_app() {
+    local app_name="$1"
+    local app_dir="$APPS_DIR/$app_name"
+    local config_file="$app_dir/config.yaml"
+    local update_script="$app_dir/scripts/update.sh"
+
+    log_info "开始更新 $app_name..."
+
+    # 检查应用是否存在
+    if [ ! -d "$app_dir" ]; then
+        log_error "应用 $app_name 不存在"
+        return 1
+    fi
+
+    # 检查应用是否已安装
+    if [ ! -f "$app_dir/.installed" ]; then
+        log_error "应用 $app_name 未安装，请先安装"
+        return 1
+    fi
+
+    # 执行更新步骤
+    local total_steps=3
+    local current_step=0
+
+    # 步骤1：更新依赖
+    ((current_step++))
+    show_progress $current_step $total_steps "更新依赖项"
+    if [ -f "$app_dir/requirements.txt" ]; then
+        pip install -r "$app_dir/requirements.txt" --upgrade || {
+            log_error "更新依赖失败"
+            return 1
+        }
+    else
+        log_info "无需更新依赖项"
+    fi
+
+    # 步骤2：执行更新脚本
+    ((current_step++))
+    show_progress $current_step $total_steps "执行更新脚本"
+    if [ -f "$update_script" ]; then
+        if ! bash "$update_script"; then
+            log_error "更新脚本执行失败"
+            return 1
+        fi
+    else
+        log_info "无更新脚本需要执行"
+    fi
+
+    # 步骤3：更新完成
+    ((current_step++))
+    show_progress $current_step $total_steps "完成更新"
+
+    # 确保状态保持为已安装
+    update_yaml "$config_file" "status" "installed"
+
+    log_success "应用 $app_name 更新成功！"
+    return 0
+}
