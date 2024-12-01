@@ -58,6 +58,5 @@ out/
 *.backup
 *.[Bb]ak
 
-安装脚本*.md
-DEVELOPMENT.md
-README.md
+# 安装脚本*.md
+# README.md

@@ -1,0 +1,29 @@
+required:  # 必需字段
+  - name      # 应用名称
+  - type      # 应用类型
+  - version   # 版本号
+  - cmd       # 命令
+
+env_rules:
+  required: []    # 必需的环境变量
+  optional: []    # 可选的环境变量
+
+validation_rules:  # 验证规则
+  name:           # 名称规则
+    type: string
+    min_length: 1
+    max_length: 50
+    pattern: "^[a-zA-Z0-9_-]+$"  # 仅允许字母、数字、下划线和连字符
+  
+  version:        # 版本号规则
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"  # 格式：x.y.z
+  
+  type:           # 类型规则
+    type: string
+    allowed_values:  # 允许的值
+      - text_generation      # 文本生成
+      - image_generation    # 图像生成
+      - speech_recognition  # 语音识别
+      - translation        # 翻译
+      - other             # 其他

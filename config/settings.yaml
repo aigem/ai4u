@@ -1,0 +1,19 @@
+# AI工具安装系统全局设置
+system:
+  version: "1.0.0"    # 系统版本
+  debug: false        # 调试模式
+  log_level: "info"   # 日志级别
+
+paths:
+  apps: "./apps"          # 应用目录
+  templates: "./templates"  # 模板目录
+  logs: "./logs"          # 日志目录
+
+defaults:
+  timeout: 300            # 超时时间（秒）
+  retry_count: 3          # 重试次数
+  concurrent_installs: 1  # 并发安装数
+
+security:
+  verify_checksums: true    # 验证校验和
+  enforce_permissions: true  # 强制权限检查
