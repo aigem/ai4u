@@ -9,19 +9,17 @@ source "$ROOT_DIR/lib/utils/logger.sh"
 # 解析命令行参数
 parse_arguments() {
     export USE_BASIC_UI=false  # 默认使用TUI
-    export COMMAND=""
-    export APP_NAME=""
-    export APP_TYPE=""
-    export INTERACTIVE=false
-
+    export TEST_MODE=false     # 添加测试模式标志
+    
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --no-ui)
-                export USE_BASIC_UI=true
+            --test-mode)
+                export TEST_MODE=true
+                export USE_BASIC_UI=true  # 测试模式强制使用命令行界面
                 shift
                 ;;
-            --force-ui)
-                export USE_BASIC_UI=false
+            --no-ui)
+                export USE_BASIC_UI=true
                 shift
                 ;;
             create|install|remove|update|status|list|test)
@@ -55,6 +53,12 @@ parse_arguments() {
 main() {
     # 初始化系统
     source "$ROOT_DIR/lib/core/init.sh"
+    
+    # 如果是测试模式，直接执行命令
+    if [ "$TEST_MODE" = "true" ]; then
+        handle_cli_mode
+        return
+    fi
     
     # 检查并安装UI依赖
     check_ui_dependencies
