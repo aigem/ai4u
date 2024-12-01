@@ -18,13 +18,20 @@ create_app_interactive() {
 
     # 选择应用类型
     local app_type=""
-    case "$REPLY" in
+    echo "请选择应用类型："
+    echo "1) web"
+    echo "2) cli"
+    echo "3) service"
+    echo "4) other"
+    read -p "请选择 (1-4): " choice
+    
+    case "$choice" in
         1) app_type="web";;
         2) app_type="cli";;
         3) app_type="service";;
         4) app_type="other";;
         *) 
-            log_error "无效的选项：$REPLY"
+            log_error "无效的选项：$choice"
             return 1
             ;;
     esac
