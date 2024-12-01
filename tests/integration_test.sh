@@ -86,7 +86,7 @@ test_cli_mode() {
     echo "y" | "$ROOT_DIR/aitools.sh" --test-mode install "$TEST_APP" || handle_error "CLI模式安装应用失败"
     
     # 测试查看状态
-    "$ROOT_DIR/aitools.sh" --test-mode status "$TEST_APP" || handle_error "CLI模式查看状态失败"
+    "$ROOT_DIR/aitools.sh" --test-mode status "$TEST_APP" || handle_error "CLI模式查看状态���败"
     
     # 测试更新应用
     "$ROOT_DIR/aitools.sh" --test-mode update "$TEST_APP" || handle_error "CLI模式更新应用失败"
@@ -146,7 +146,7 @@ test_create_app() {
         [ -d "$INTERACTIVE_APP_DIR/$dir" ] || handle_error "交互式创建目录不存在：$dir"
     done
     
-    # 检查交互式创建的必要文件
+    # 检查交互式创建的必要���件
     for file in "config.yaml" "requirements.txt" "config/settings.yaml.template"; do
         [ -f "$INTERACTIVE_APP_DIR/$file" ] || handle_error "交互式创建文件不存在：$file"
     done
@@ -172,7 +172,7 @@ test_create_app() {
     log_success "创建应用测试通过"
 }
 
-# 测试安装应用
+# 测试���装应用
 test_install_app() {
     log_info "测试安装应用..."
     
@@ -209,7 +209,7 @@ test_app_status() {
     # 检查状态显示
     show_status "$TEST_APP" || handle_error "获取应用状态失败"
     
-    # 检查状态文件
+    # 检查状���文件
     [ -f "$TEST_APP_DIR/scripts/status.sh" ] || handle_error "状态脚本不存在"
     [ -x "$TEST_APP_DIR/scripts/status.sh" ] || handle_error "状态脚本没有执行权限"
     
@@ -365,7 +365,7 @@ test_ui_dependencies() {
         whiptail --version >/dev/null 2>&1 || handle_error "whiptail不可用"
     fi
     
-    log_success "UI依赖检查测试通过"
+    log_success "UI依赖检查���试通过"
 }
 
 # 运行所有测试
@@ -408,14 +408,54 @@ else
     fi
 fi
 
+# 测试配置文件
 test_config_files() {
     log_info "测试配置文件..."
     
-    # 测试全局配置
-    [ -f "$CONFIG_DIR/settings.yaml" ] || handle_error "全局配置文件不存在"
+    # 创建测试应用
+    create_app "$TEST_APP" "web" || handle_error "创建测试应用失败"
     
-    # 测试应用配置
-    [ -f "$TEST_APP_DIR/config/settings.yaml.template" ] || handle_error "应用配置模板不存在"
+    # 检查基本目录结构
+    [ -d "$TEST_APP_DIR" ] || handle_error "应用目录不存在"
+    [ -d "$TEST_APP_DIR/config" ] || handle_error "配置目录不存在"
+    [ -d "$TEST_APP_DIR/scripts" ] || handle_error "脚本目录不存在"
+    [ -d "$TEST_APP_DIR/data" ] || handle_error "数据目录不存在"
+    [ -d "$TEST_APP_DIR/logs" ] || handle_error "日志目录不存在"
+    
+    # 检查必要文件
+    [ -f "$TEST_APP_DIR/config.yaml" ] || handle_error "主配置文件不存在"
+    [ -f "$TEST_APP_DIR/config/settings.yaml.template" ] || handle_error "配置模板不存在"
+    [ -f "$TEST_APP_DIR/requirements.txt" ] || handle_error "依赖文件不存在"
+    
+    # 检查脚本文件
+    [ -f "$TEST_APP_DIR/scripts/install.sh" ] || handle_error "安装脚本不存在"
+    [ -f "$TEST_APP_DIR/scripts/uninstall.sh" ] || handle_error "卸载脚本不存在"
+    [ -f "$TEST_APP_DIR/scripts/update.sh" ] || handle_error "更新脚本不存在"
+    [ -f "$TEST_APP_DIR/scripts/status.sh" ] || handle_error "状态脚本不存在"
+    [ -f "$TEST_APP_DIR/scripts/test.sh" ] || handle_error "测试脚本不存在"
+    
+    # 检查脚本权限
+    [ -x "$TEST_APP_DIR/scripts/install.sh" ] || handle_error "安装脚本无执行权限"
+    [ -x "$TEST_APP_DIR/scripts/uninstall.sh" ] || handle_error "卸载脚本无执行权限"
+    [ -x "$TEST_APP_DIR/scripts/update.sh" ] || handle_error "更新脚本无执行权限"
+    [ -x "$TEST_APP_DIR/scripts/status.sh" ] || handle_error "状态脚本无执行权限"
+    [ -x "$TEST_APP_DIR/scripts/test.sh" ] || handle_error "测试脚本无执行权限"
+    
+    # 检查配置文件格式
+    yaml_validate "$TEST_APP_DIR/config.yaml" || handle_error "主配置文件格式无效"
+    yaml_validate "$TEST_APP_DIR/config/settings.yaml.template" || handle_error "配置模板格式无效"
+    
+    # 检查配置文件内容
+    local app_name=$(yaml_get "$TEST_APP_DIR/config.yaml" "name")
+    local app_type=$(yaml_get "$TEST_APP_DIR/config.yaml" "type")
+    local app_version=$(yaml_get "$TEST_APP_DIR/config.yaml" "version")
+    
+    [ "$app_name" = "$TEST_APP" ] || handle_error "配置文件中的应用名称不正确"
+    [ "$app_type" = "web" ] || handle_error "配置文件中的应用类型不正确"
+    [ "$app_version" = "1.0.0" ] || handle_error "配置文件中的版本号不正确"
+    
+    log_success "配置文件测试通过"
+    return 0
 }
 
 # 创建示例测试脚本时不需要再进行完整测试
