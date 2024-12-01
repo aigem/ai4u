@@ -1,13 +1,20 @@
-name: ""          # 应用名称
-type: ""          # 应用类型
-version: "1.0"    # 版本号
+# 基础应用配置模板
+name: ""                # 应用名称
+type: ""                # 应用类型
+version: "1.0.0"        # 版本号
+description: ""         # 应用描述
 
-deps: []          # 依赖项
-env: {}           # 环境变量
+# 依赖配置
+dependencies: []        # 系统依赖项
+environment: {}         # 环境变量
 
-steps:            # 安装步骤
-  pre: []         # 安装前步骤
-  main: []        # 主要安装步骤
-  post: []        # 安装后步骤
+# 安装配置
+steps:                 # 安装步骤
+  pre: []              # 安装前执行的步骤
+  main: []             # 主要安装步骤
+  post: []             # 安装后执行的步骤
 
-cmd: ""          # 启动命令
+# 运行配置
+command: ""            # 启动命令
+working_dir: ""        # 工作目录
+log_dir: "logs"        # 日志目录

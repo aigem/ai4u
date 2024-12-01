@@ -5,48 +5,116 @@ install_app() {
     local app_name="$1"
     local app_dir="$APPS_DIR/$app_name"
     local config_file="$app_dir/config.yaml"
+    local install_script="$app_dir/scripts/install.sh"
 
     log_info "开始安装 $app_name..."
 
     # 显示欢迎信息
     show_welcome_message "$app_name"
 
+    # 检查应用是否存在
+    if [ ! -d "$app_dir" ]; then
+        log_error "应用 $app_name 不存在，请先创建应用"
+        return 1
+    fi
+
+    # 检查是否已安装
+    if [ -f "$app_dir/.installed" ]; then
+        log_error "应用 $app_name 已经安装"
+        return 1
+    fi
+
     # 检查安装前提条件
     if ! check_installation_prerequisites "$app_name"; then
         return 1
     fi
 
-    # 创建临时工作目录
-    local workspace=$(mktemp -d)
-    trap 'cleanup_on_error "$workspace" "$app_name"' ERR
-    trap 'rm -rf "$workspace"' EXIT
-
     # 执行安装步骤并显示进度
-    local total_steps=3
+    local total_steps=4
     local current_step=0
 
-    # 步骤1：配置
+    # 步骤1：安装依赖
     ((current_step++))
-    show_progress $current_step $total_steps "配置应用"
-    if ! configure_application "$app_name" "$workspace"; then
+    show_progress $current_step $total_steps "安装依赖项"
+    if ! install_dependencies "$app_name"; then
         return 1
     fi
 
-    # 步骤2：安装
+    # 步骤2：配置环境
     ((current_step++))
-    show_progress $current_step $total_steps "安装组件"
-    if ! execute_installation "$app_name" "$workspace"; then
+    show_progress $current_step $total_steps "配置环境"
+    if ! configure_environment "$app_name"; then
         return 1
     fi
 
-    # 步骤3：验证
+    # 步骤3：执行安装脚本
     ((current_step++))
-    show_progress $current_step $total_steps "验证安装"
-    if ! verify_installation "$app_name"; then
-        return 1
+    show_progress $current_step $total_steps "执行安装脚本"
+    if [ -f "$install_script" ]; then
+        if ! bash "$install_script"; then
+            log_error "安装脚本执行失败"
+            return 1
+        fi
     fi
+
+    # 步骤4：标记为已安装
+    ((current_step++))
+    show_progress $current_step $total_steps "完成安装"
+    touch "$app_dir/.installed"
 
     show_success_message "$app_name"
+    return 0
+}
+
+# 安装依赖项
+install_dependencies() {
+    local app_name="$1"
+    local config_file="$APPS_DIR/$app_name/config.yaml"
+    
+    # 读取依赖项列表
+    local deps=($(yaml_get_array "$config_file" "dependencies"))
+    
+    if [ ${#deps[@]} -eq 0 ]; then
+        log_info "无需安装依赖项"
+        return 0
+    fi
+
+    log_info "安装依赖项：${deps[*]}"
+    for dep in "${deps[@]}"; do
+        if ! command -v "$dep" &> /dev/null; then
+            if ! apt-get install -y "$dep"; then
+                log_error "安装依赖项失败：$dep"
+                return 1
+            fi
+        fi
+    done
+
+    return 0
+}
+
+# 配置环境变量
+configure_environment() {
+    local app_name="$1"
+    local config_file="$APPS_DIR/$app_name/config.yaml"
+    local env_file="$APPS_DIR/$app_name/.env"
+    
+    # 读取环境变量配置
+    local env_vars=($(yaml_get_array "$config_file" "environment"))
+    
+    if [ ${#env_vars[@]} -eq 0 ]; then
+        log_info "无需配置环境变量"
+        return 0
+    fi
+
+    # 创建环境变量文件
+    echo "# $app_name 环境变量配置" > "$env_file"
+    for env in "${env_vars[@]}"; do
+        echo "export $env" >> "$env_file"
+    done
+    
+    # 设置权限
+    chmod 600 "$env_file"
+
     return 0
 }
 
@@ -55,12 +123,6 @@ check_installation_prerequisites() {
     local app_name="$1"
     local app_dir="$APPS_DIR/$app_name"
     local config_file="$app_dir/config.yaml"
-
-    # 检查应用目录是否已存在
-    if [ -d "$app_dir" ]; then
-        log_error "应用 $app_name 已存在"
-        return 1
-    fi
 
     # 检查系统资源
     local required_disk_space=1024  # MB

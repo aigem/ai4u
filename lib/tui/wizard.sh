@@ -43,14 +43,16 @@ show_creation_wizard() {
     # 步骤2：依赖项
     echo -e "\n步骤2：依赖项"
     echo "-------------"
+    local dependencies=()
     read -p "您的应用是否需要特定的系统包？(y/n): " has_deps
     if [[ $has_deps =~ ^[Yy]$ ]]; then
-        read -p "输入包名（用空格分隔）: " -a deps
+        read -p "输入包名（用空格分隔）: " -a dependencies
     fi
 
     # 步骤3：环境设置
     echo -e "\n步骤3：环境设置"
     echo "-------------"
+    local env_vars=()
     read -p "是否需要配置环境变量？(y/n): " has_env
     if [[ $has_env =~ ^[Yy]$ ]]; then
         echo "输入环境变量（格式：KEY=VALUE，每行一个，输入空行结束）："
@@ -61,7 +63,7 @@ show_creation_wizard() {
     fi
 
     # 创建应用
-    create_app_from_wizard "$name" "$type" "${deps[@]}" "${env_vars[@]}"
+    create_app_from_wizard "$name" "$type" "${dependencies[@]}" "${env_vars[@]}"
     
     # 显示下一步操作
     show_next_steps "$name"
@@ -72,9 +74,20 @@ create_app_from_wizard() {
     local name="$1"
     local type="$2"
     shift 2
-    local deps=("${@}")
+    local dependencies=()
+    local env_vars=()
+    
+    # 分离依赖项和环境变量
+    while [ $# -gt 0 ]; do
+        if [[ "$1" == *"="* ]]; then
+            env_vars+=("$1")
+        else
+            dependencies+=("$1")
+        fi
+        shift
+    done
 
-    # 创建应用目录
+    # 创建应用配置目录
     local app_dir="$APPS_DIR/$name"
     if [ -d "$app_dir" ]; then
         log_error "应用已存在：$name"
@@ -82,32 +95,55 @@ create_app_from_wizard() {
     fi
 
     mkdir -p "$app_dir"
+    mkdir -p "$app_dir/scripts"
 
     # 复制基础配置
     cp "$TEMPLATES_DIR/app_configs/base.yaml" "$app_dir/config.yaml"
 
-    # 更新配置
-    update_yaml "$app_dir/config.yaml" "name" "$name"
-    update_yaml "$app_dir/config.yaml" "type" "$type"
-    update_yaml "$app_dir/config.yaml" "version" "1.0.0"
+    # 创建基本配置
+    cat > "$app_dir/config.yaml" << EOL
+name: $name
+type: $type
+version: 1.0.0
+description: "$type 类型的AI应用"
 
-    # 如果有依赖项，添加到配置
-    if [ ${#deps[@]} -gt 0 ]; then
-        for dep in "${deps[@]}"; do
-            update_yaml "$app_dir/config.yaml" "dependencies[]" "$dep"
+# 依赖项配置
+dependencies:
+EOL
+
+    # 添加依赖项
+    if [ ${#dependencies[@]} -gt 0 ]; then
+        for dep in "${dependencies[@]}"; do
+            echo "  - $dep" >> "$app_dir/config.yaml"
         done
     fi
 
-    # 如果有环境变量，添加到配置
+    # 添加环境变量
+    echo -e "\n# 环境变量配置\nenvironment:" >> "$app_dir/config.yaml"
     if [ ${#env_vars[@]} -gt 0 ]; then
         for env in "${env_vars[@]}"; do
-            update_yaml "$app_dir/config.yaml" "environment[]" "$env"
+            local key="${env%%=*}"
+            local value="${env#*=}"
+            echo "  $key: \"$value\"" >> "$app_dir/config.yaml"
         done
     fi
 
-    # 创建其他必需文件
-    touch "$app_dir/status.sh"
-    chmod +x "$app_dir/status.sh"
+    # 添加安装步骤
+    cat >> "$app_dir/config.yaml" << EOL
+
+# 安装步骤配置
+steps:
+  pre: []    # 安装前执行的步骤
+  main: []   # 主要安装步骤
+  post: []   # 安装后执行的步骤
+EOL
+
+    # 创建必要的脚本文件
+    touch "$app_dir/scripts/install.sh"
+    touch "$app_dir/scripts/uninstall.sh"
+    touch "$app_dir/scripts/update.sh"
+    touch "$app_dir/scripts/status.sh"
+    chmod +x "$app_dir/scripts/"*.sh
 
     log_success "应用创建成功：$name"
     return 0
@@ -118,7 +154,8 @@ show_next_steps() {
     local name="$1"
     echo -e "\n恭喜！应用 $name 已创建成功。"
     echo "下一步操作："
-    echo "1. 运行 ./aitools.sh install $name 安装应用"
-    echo "2. 运行 ./aitools.sh status $name 检查应用状态"
-    echo "3. 编辑 apps/$name/config.yaml 修改配置"
+    echo "1. 编辑 apps/$name/scripts 目录下的脚本文件"
+    echo "2. 编辑 apps/$name/config.yaml 完善配置"
+    echo "3. 运行 ./aitools.sh install $name 安装应用"
+    echo "4. 运行 ./aitools.sh status $name 检查应用状态"
 }

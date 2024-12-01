@@ -1,21 +1,23 @@
 #!/bin/bash
 
-# 加载所有必需的库文件
-source ./lib/utils/logger.sh
-source ./lib/utils/validator.sh
-source ./lib/utils/yaml_parser.sh
-source ./lib/utils/yaml_utils.sh
-source ./lib/utils/system_check.sh
-source ./lib/core/app_manager.sh
-source ./lib/core/app_creator.sh
-source ./lib/core/step_executor.sh
-source ./lib/tui/interface.sh
-
-# 初始化全局变量
+# 设置脚本目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_DIR="$SCRIPT_DIR/../../config"
-TEMPLATES_DIR="$SCRIPT_DIR/../../templates"
-APPS_DIR="$SCRIPT_DIR/../../apps"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+LIB_DIR="$ROOT_DIR/lib"
+CONFIG_DIR="$ROOT_DIR/config"
+TEMPLATES_DIR="$ROOT_DIR/templates"
+APPS_DIR="$ROOT_DIR/apps"
+
+# 加载所有必需的库文件
+source "$LIB_DIR/utils/logger.sh"
+source "$LIB_DIR/utils/validator.sh"
+source "$LIB_DIR/utils/yaml_parser.sh"
+source "$LIB_DIR/utils/yaml_utils.sh"
+source "$LIB_DIR/utils/system_check.sh"
+source "$LIB_DIR/core/app_manager.sh"
+source "$LIB_DIR/core/app_creator.sh"
+source "$LIB_DIR/core/step_executor.sh"
+source "$LIB_DIR/tui/interface.sh"
 
 # 加载全局设置
 load_settings() {
