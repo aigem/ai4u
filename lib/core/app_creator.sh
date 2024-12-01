@@ -279,10 +279,12 @@ create_app_interactive() {
     fi
 
     # 选择应用类型
+    local app_type=""
     echo "请选择应用类型："
-    select app_type in "web" "cli" "service" "other"; do
-        case $app_type in
+    select type in "web" "cli" "service" "other"; do
+        case $type in
             web|cli|service|other)
+                app_type="$type"
                 break
                 ;;
             *) echo "请选择有效的选项 1-4";;
@@ -300,18 +302,7 @@ create_app_interactive() {
     create_app_structure "$app_dir" "$app_name" "$app_type" "$app_version" "$app_description"
     
     log_success "应用 $app_name 创建成功！"
+    show_next_steps "$app_name"
     
-    # 显示下一步操作指引
-    cat << EOF
-
-[下一步操作]
-1. 编辑配置文件：
-   $app_dir/config.yaml
-
-2. 安装应用：
-   ./aitools.sh install $app_name
-
-3. 检查应用状态：
-   ./aitools.sh status $app_name
-EOF
+    return 0
 }
