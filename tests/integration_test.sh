@@ -46,7 +46,7 @@ test_cli_mode() {
     "$ROOT_DIR/aitools.sh" --test-mode create "$TEST_APP" --type web || handle_error "CLI模式创建应用失败"
     
     # 测试安装应用
-    "$ROOT_DIR/aitools.sh" --test-mode install "$TEST_APP" || handle_error "CLI模式安装应用失败"
+    echo "y" | "$ROOT_DIR/aitools.sh" --test-mode install "$TEST_APP" || handle_error "CLI模式安装应用失败"
     
     # 测试查看状态
     "$ROOT_DIR/aitools.sh" --test-mode status "$TEST_APP" || handle_error "CLI模式查看状态失败"
@@ -57,8 +57,8 @@ test_cli_mode() {
     # 测试列出应用
     "$ROOT_DIR/aitools.sh" --test-mode list || handle_error "CLI模式列出应用失败"
     
-    # 测试移除应用
-    "$ROOT_DIR/aitools.sh" --test-mode remove "$TEST_APP" || handle_error "CLI模式移除应用失败"
+    # 测试移除应用（自动确认）
+    echo "y" | "$ROOT_DIR/aitools.sh" --test-mode remove "$TEST_APP" || handle_error "CLI模式移除应用失败"
     
     log_success "命令行模式测试通过"
 }

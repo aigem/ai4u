@@ -24,11 +24,13 @@ install_app() {
     # 检查是否已安装
     if [ -f "$app_dir/.installed" ]; then
         log_error "应用 $app_name 已经安装"
-        # 询问是否重新安装，如果选择否则返回,否则继续
-        read -p "确定要重新安装吗?(y/n) " confirm
-        if [[ $confirm != "y" ]]; then
-            log_info "取消重新安装"
-            return 0
+        # 在非测试模式下询问确认
+        if [ "$TEST_MODE" != "true" ]; then
+            read -p "确定要重新安装吗?(y/n) " confirm
+            if [[ $confirm != "y" ]]; then
+                log_info "取消重新安装"
+                return 0
+            fi
         fi
         rm -f "$app_dir/.installed"
     fi
@@ -193,19 +195,19 @@ remove_app() {
     local app_name="$1"
     local app_dir="$APPS_DIR/$app_name"
 
-    #询问是否确认移除
-    read -p "确定要移除 $app_name 吗?(y/n) " confirm
-    if [[ $confirm != "y" ]]; then
-        log_info "取消移除 $app_name"
-        return 0
-    fi
-
-    log_info "开始移除 $app_name..."
-
     # 检查应用是否存在
     if [ ! -d "$app_dir" ]; then
         log_error "应用 $app_name 不存在"
         return 1
+    fi
+
+    # 在非测试模式下询问确认
+    if [ "$TEST_MODE" != "true" ]; then
+        read -p "确定要移除 $app_name 吗?(y/n) " confirm
+        if [[ $confirm != "y" ]]; then
+            log_info "取消移除 $app_name"
+            return 0
+        fi
     fi
 
     # 执行卸载前的清理工作
