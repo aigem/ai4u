@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # AI工具安装系统主入口脚本
-source ./lib/core/init.sh
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+source "$SCRIPT_DIR/lib/core/init.sh"
 
 # 解析命令行参数
 parse_arguments "$@"
@@ -25,7 +26,7 @@ case "$COMMAND" in
         ;;
     "create")
         if [ "$INTERACTIVE" = true ]; then
-            create_app_interactive
+            create_app_interactive "$APP_NAME"
         else
             if [ -z "$APP_NAME" ] || [ -z "$APP_TYPE" ]; then
                 log_error "创建应用需要指定应用名称和类型"

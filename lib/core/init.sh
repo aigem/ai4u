@@ -1,23 +1,36 @@
 #!/bin/bash
 
 # 设置脚本目录
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 LIB_DIR="$ROOT_DIR/lib"
 CONFIG_DIR="$ROOT_DIR/config"
 TEMPLATES_DIR="$ROOT_DIR/templates"
 APPS_DIR="$ROOT_DIR/apps"
 
+# 确保必要的目录存在
+mkdir -p "$CONFIG_DIR"
+mkdir -p "$TEMPLATES_DIR"
+mkdir -p "$APPS_DIR"
+
 # 加载所有必需的库文件
-source "$LIB_DIR/utils/logger.sh"
-source "$LIB_DIR/utils/validator.sh"
-source "$LIB_DIR/utils/yaml_parser.sh"
-source "$LIB_DIR/utils/yaml_utils.sh"
-source "$LIB_DIR/utils/system_check.sh"
-source "$LIB_DIR/core/app_manager.sh"
-source "$LIB_DIR/core/app_creator.sh"
-source "$LIB_DIR/core/step_executor.sh"
-source "$LIB_DIR/tui/interface.sh"
+for lib in \
+    "$LIB_DIR/utils/logger.sh" \
+    "$LIB_DIR/utils/validator.sh" \
+    "$LIB_DIR/utils/yaml_parser.sh" \
+    "$LIB_DIR/utils/yaml_utils.sh" \
+    "$LIB_DIR/utils/system_check.sh" \
+    "$LIB_DIR/core/app_manager.sh" \
+    "$LIB_DIR/core/app_creator.sh" \
+    "$LIB_DIR/core/step_executor.sh" \
+    "$LIB_DIR/tui/interface.sh"; do
+    if [ -f "$lib" ]; then
+        source "$lib"
+    else
+        echo "错误：找不到必需的库文件：$lib"
+        exit 1
+    fi
+done
 
 # 加载全局设置
 load_settings() {

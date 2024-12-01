@@ -250,7 +250,7 @@ show_status() {
     if [ ! -f "$config_file" ]; then
         log_error "应用 $app_name 的配置文件不存在"
         return 1
-    }
+    fi
 
     # 读取配置信息
     local app_type=$(yaml_get_value "$config_file" "type")
