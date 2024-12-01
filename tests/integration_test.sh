@@ -7,6 +7,7 @@ APPS_DIR="$ROOT_DIR/apps"
 
 # 加载工具函数
 source "$ROOT_DIR/lib/utils/logger.sh"
+source "$ROOT_DIR/lib/utils/yaml_utils.sh"
 source "$ROOT_DIR/lib/core/app_creator.sh"
 source "$ROOT_DIR/lib/core/app_manager.sh"
 

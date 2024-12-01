@@ -243,6 +243,25 @@ EOF
     chmod +x "$app_dir/scripts/status.sh"
 }
 
+# 显示下一步操作指引
+show_next_steps() {
+    local app_name="$1"
+    local app_dir="$APPS_DIR/$app_name"
+    
+    cat << EOF
+
+[下一步操作]
+1. 编辑配置文件：
+   $app_dir/config.yaml
+
+2. 安装应用：
+   ./aitools.sh install $app_name
+
+3. 检查应用状态：
+   ./aitools.sh status $app_name
+EOF
+}
+
 # 交互式创建应用
 create_app_interactive() {
     local app_name="$1"
