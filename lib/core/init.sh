@@ -1,8 +1,12 @@
 #!/bin/bash
 
-# 设置脚本目录
-SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# 设置目录变量
+if [ -z "$ROOT_DIR" ]; then
+    # 如果 ROOT_DIR 未设置，则设置它
+    SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+    ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+fi
+
 LIB_DIR="$ROOT_DIR/lib"
 CONFIG_DIR="$ROOT_DIR/config"
 TEMPLATES_DIR="$ROOT_DIR/templates"

@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # AI工具安装系统主入口脚本
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/lib/core/init.sh"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$ROOT_DIR/lib/core/init.sh"
 
 # 运行测试
 run_tests() {
-    local test_script="$SCRIPT_DIR/tests/integration_test.sh"
+    local test_script="$ROOT_DIR/tests/integration_test.sh"
     if [ -f "$test_script" ]; then
         log_info "运行集成测试..."
         # 确保脚本有执行权限
