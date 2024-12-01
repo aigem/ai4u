@@ -36,7 +36,7 @@ parse_arguments() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            install|remove|update|status|create)
+            install|remove|update|status|list|create)
                 COMMAND="$1"
                 shift
                 ;;
@@ -88,6 +88,7 @@ show_usage() {
   remove <应用>              移除AI应用
   update <应用>              更新AI应用
   status <应用>              显示应用状态
+  list                      列出所有已安装的应用
   create [选项] <应用>        创建新应用
 
 创建选项:
@@ -99,36 +100,37 @@ show_usage() {
   - image_generation      图像生成
   - speech_recognition    语音识别
   - translation          翻译
-  - other                其他
+  - other               其他类型
 EOF
 }
 
 # 初始化系统
 init_system() {
-    # check_root_user
-    check_system_requirements || exit 1
-    load_settings
+    # 检查是否为root用户
+    check_root_user
+    
+    # 检查系统依赖
     check_dependencies
-
-    # 创建所需目录
+    
+    # 创建必需的目录
     mkdir -p "$APPS_DIR"
-    mkdir -p "$CONFIG_DIR/logs"
+    mkdir -p "$CONFIG_DIR"
 }
 
 # 检查是否为root用户
 check_root_user() {
     if [ "$(id -u)" != "0" ]; then
-        log_error "请使用root用户运行此脚本"
+        log_error "此脚本需要root权限运行"
         exit 1
     fi
 }
 
 # 检查系统依赖
 check_dependencies() {
-    local deps=("curl" "wget" "git" "python3")
+    local deps=(curl wget git python3)
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &> /dev/null; then
-            log_error "未找到必需的依赖：$dep"
+            log_error "缺少必需的依赖：$dep"
             exit 1
         fi
     done

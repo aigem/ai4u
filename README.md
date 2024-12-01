@@ -63,24 +63,27 @@ sudo ./aitools.sh create myapp --type text_generation
 
 ### 应用管理
 
-#### 安装
 ```bash
-sudo ./aitools.sh install myapp
-```
+# 列出所有应用
+./aitools.sh list
 
-#### 状态检查
-```bash
-sudo ./aitools.sh status myapp
-```
+# 创建新应用（交互式）
+./aitools.sh create --interactive
 
-#### 更新
-```bash
-sudo ./aitools.sh update myapp
-```
+# 创建新应用（非交互式）
+./aitools.sh create --type text_generation myapp
 
-#### 卸载
-```bash
-sudo ./aitools.sh remove myapp
+# 安装应用
+./aitools.sh install myapp
+
+# 查看应用状态
+./aitools.sh status myapp
+
+# 更新应用
+./aitools.sh update myapp
+
+# 移除应用
+./aitools.sh remove myapp
 ```
 
 ## 配置指南

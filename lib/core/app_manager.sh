@@ -50,6 +50,37 @@ install_app() {
     return 0
 }
 
+# 列出所有已安装的应用
+list_apps() {
+    echo "=============================="
+    echo "  已安装的AI应用"
+    echo "=============================="
+    
+    if [ ! -d "$APPS_DIR" ] || [ -z "$(ls -A "$APPS_DIR")" ]; then
+        echo "当前没有已安装的应用"
+        echo "使用 'create' 命令创建新应用"
+        return 0
+    fi
+
+    echo "应用列表："
+    echo "----------------------------"
+    for app_dir in "$APPS_DIR"/*; do
+        if [ -d "$app_dir" ]; then
+            local app_name=$(basename "$app_dir")
+            local config_file="$app_dir/config.yaml"
+            if [ -f "$config_file" ]; then
+                local type=$(yaml_get_value "$config_file" "type")
+                local version=$(yaml_get_value "$config_file" "version")
+                printf "%-20s %-15s %s\n" "$app_name" "$type" "v$version"
+            else
+                printf "%-20s %-15s %s\n" "$app_name" "未知" "配置缺失"
+            fi
+        fi
+    done
+    echo "----------------------------"
+    echo "使用 'status <应用名称>' 查看详细信息"
+}
+
 # 显示欢迎信息
 show_welcome_message() {
     local app_name="$1"

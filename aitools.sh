@@ -20,6 +20,9 @@ case "$COMMAND" in
     "status")
         show_status "$APP_NAME"
         ;;
+    "list")
+        list_apps
+        ;;
     "create")
         if [ "$INTERACTIVE" = true ]; then
             create_app_interactive
