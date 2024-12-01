@@ -70,34 +70,67 @@ test_create_app() {
     # 测试基本创建
     create_app "$TEST_APP" "web" || handle_error "创建应用失败"
     
-    # 测试交互式创建
-    cleanup
-    echo -e "test_app_interactive\nweb\n" | create_app_interactive || handle_error "交互式创建应用失败"
-    
-    # 检查目录结构
+    # 检查基本创建的目录结构
     for dir in "scripts" "config" "data" "logs"; do
-        [ -d "$TEST_APP_DIR/$dir" ] || handle_error "目录不存在：$dir"
+        [ -d "$TEST_APP_DIR/$dir" ] || handle_error "基本创建目录不存在：$dir"
     done
     
-    # 检查必要文件
+    # 检查基本创建的必要文件
     for file in "config.yaml" "requirements.txt" "config/settings.yaml.template"; do
-        [ -f "$TEST_APP_DIR/$file" ] || handle_error "文件不存在：$file"
+        [ -f "$TEST_APP_DIR/$file" ] || handle_error "基本创建文件不存在：$file"
     done
     
-    # 检查必要脚本
+    # 检查基本创建的必要脚本
     for script in "install.sh" "uninstall.sh" "update.sh" "status.sh" "test.sh"; do
-        [ -f "$TEST_APP_DIR/scripts/$script" ] || handle_error "脚本不存在：$script"
-        [ -x "$TEST_APP_DIR/scripts/$script" ] || handle_error "脚本没有执行权限：$script"
+        [ -f "$TEST_APP_DIR/scripts/$script" ] || handle_error "基本创建脚本不存在：$script"
+        [ -x "$TEST_APP_DIR/scripts/$script" ] || handle_error "基本创建脚本没有执行权限：$script"
     done
     
-    # 检查配置文件内容
+    # 检查基本创建的配置文件内容
     local name=$(yaml_get "$TEST_APP_DIR/config.yaml" "name")
     local type=$(yaml_get "$TEST_APP_DIR/config.yaml" "type")
     local status=$(yaml_get "$TEST_APP_DIR/config.yaml" "status")
     
-    [ "$name" = "$TEST_APP" ] || handle_error "配置文件中的应用名称不正确"
-    [ "$type" = "web" ] || handle_error "配置文件中的应用类型不正确"
-    [ "$status" = "not_installed" ] || handle_error "配置文件中的应用状态不正确"
+    [ "$name" = "$TEST_APP" ] || handle_error "基本创建配置文件中的应用名称不正确"
+    [ "$type" = "web" ] || handle_error "基本创建配置文件中的应用类型不正确"
+    [ "$status" = "not_installed" ] || handle_error "基本创建配置文件中的应用状态不正确"
+    
+    # 清理基本创建的应用
+    cleanup
+    
+    # 测试交互式创建
+    local INTERACTIVE_APP="test_app_interactive"
+    local INTERACTIVE_APP_DIR="$APPS_DIR/$INTERACTIVE_APP"
+    
+    echo -e "$INTERACTIVE_APP\nweb\n" | create_app_interactive || handle_error "交互式创建应用失败"
+    
+    # 检查交互式创建的目录结构
+    for dir in "scripts" "config" "data" "logs"; do
+        [ -d "$INTERACTIVE_APP_DIR/$dir" ] || handle_error "交互式创建目录不存在：$dir"
+    done
+    
+    # 检查交互式创建的必要文件
+    for file in "config.yaml" "requirements.txt" "config/settings.yaml.template"; do
+        [ -f "$INTERACTIVE_APP_DIR/$file" ] || handle_error "交互式创建文件不存在：$file"
+    done
+    
+    # 检查交互式创建的必要脚本
+    for script in "install.sh" "uninstall.sh" "update.sh" "status.sh" "test.sh"; do
+        [ -f "$INTERACTIVE_APP_DIR/scripts/$script" ] || handle_error "交互式创建脚本不存在：$script"
+        [ -x "$INTERACTIVE_APP_DIR/scripts/$script" ] || handle_error "交互式创建脚本没有执行权限：$script"
+    done
+    
+    # 检查交互式创建的配置文件内容
+    name=$(yaml_get "$INTERACTIVE_APP_DIR/config.yaml" "name")
+    type=$(yaml_get "$INTERACTIVE_APP_DIR/config.yaml" "type")
+    status=$(yaml_get "$INTERACTIVE_APP_DIR/config.yaml" "status")
+    
+    [ "$name" = "$INTERACTIVE_APP" ] || handle_error "交互式创建配置文件中的应用名称不正确"
+    [ "$type" = "web" ] || handle_error "交互式创建配置文件中的应用类型不正确"
+    [ "$status" = "not_installed" ] || handle_error "交互式创建配置文件中的应用状态不正确"
+    
+    # 清理交互式创建的应用
+    rm -rf "$INTERACTIVE_APP_DIR"
     
     log_success "创建应用测试通过"
 }
