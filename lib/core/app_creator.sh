@@ -190,68 +190,57 @@ create_app_structure() {
     local app_dir="$1"
     local app_name="$2"
     local app_type="$3"
-    local app_version="$4"
-    local app_description="$5"
-
-    # 创建目录
+    local version="$4"
+    local description="$5"
+    
+    # 创建目录结构
     mkdir -p "$app_dir"/{scripts,config,data,logs}
-
-    # 创建配置文件
+    
+    # 创建并配置 config.yaml
     cat > "$app_dir/config.yaml" << EOF
-name: "$app_name"
-type: "$app_type"
-version: "$app_version"
-description: "$app_description"
-
-dependencies: []
-environment: {}
-
-steps:
-  pre:
-    - "mkdir -p data"
-    - "mkdir -p logs"
-  main:
-    - "pip3 install -r requirements.txt --user"
-  post:
-    - "chmod +x scripts/*.sh"
-
-command: ""
-working_dir: ""
-log_dir: "logs"
+name: $app_name
+type: $app_type
+version: $version
+description: $description
+status: not_installed
 EOF
-
-    # 创建示例依赖文件
+    
+    # 创建 requirements.txt
     cat > "$app_dir/requirements.txt" << EOF
-# 示例依赖
-pyyaml>=5.1
-requests>=2.25.1
+# Python dependencies
+PyYAML>=6.0
+requests>=2.28.0
 EOF
-
-    # 创建示例配置模板
+    
+    # 创建配置模板
     cat > "$app_dir/config/settings.yaml.template" << EOF
-# 应用配置模板
+# $app_name 应用配置
 app:
   name: $app_name
-  env: production
+  type: $app_type
+  version: $version
 
-server:
-  host: localhost
-  port: 8080
-
-logging:
-  level: INFO
-  file: ../logs/app.log
+# 应用特定配置
+settings:
+  # 在此添加应用特定配置
+  example_setting: value
 EOF
-
-    # 创建脚本
+    
+    # 创建安装脚本
     create_install_script "$app_dir"
+    
+    # 创建测试脚本
     create_test_script "$app_dir"
     
-    # 创建其他脚本
-    for script in uninstall.sh update.sh status.sh; do
-        touch "$app_dir/scripts/$script"
-        chmod +x "$app_dir/scripts/$script"
-    done
+    # 创建其他必要脚本
+    touch "$app_dir/scripts/uninstall.sh"
+    chmod +x "$app_dir/scripts/uninstall.sh"
+    
+    touch "$app_dir/scripts/update.sh"
+    chmod +x "$app_dir/scripts/update.sh"
+    
+    touch "$app_dir/scripts/status.sh"
+    chmod +x "$app_dir/scripts/status.sh"
 }
 
 # 交互式创建应用
@@ -292,5 +281,18 @@ create_app_interactive() {
     create_app_structure "$app_dir" "$app_name" "$app_type" "$app_version" "$app_description"
     
     log_success "应用 $app_name 创建成功！"
-    show_next_steps "$app_name"
+    
+    # 显示下一步操作指引
+    cat << EOF
+
+[下一步操作]
+1. 编辑配置文件：
+   $app_dir/config.yaml
+
+2. 安装应用：
+   ./aitools.sh install $app_name
+
+3. 检查应用状态：
+   ./aitools.sh status $app_name
+EOF
 }
