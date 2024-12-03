@@ -59,8 +59,11 @@ log_success "F5-TTS下载并完成依赖安装"
 # 下载模型
 log_info "下载模型..."
 mkdir -p ckpts/F5TTS_Base
+cd ckpts/F5TTS_Base
 eval $ARIA2_CMD1
+cd ../..
 mkdir -p ckpts/E2TTS_Base
+cd ckpts/E2TTS_Base
 eval $ARIA2_CMD2
 log_success "模型下载完成"
 
