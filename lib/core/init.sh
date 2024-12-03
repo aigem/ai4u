@@ -189,25 +189,25 @@ check_dependencies() {
         log_warning "未找到 aria2，正在安装..."
         if command -v apt-get >/dev/null 2>&1; then
             # Debian/Ubuntu
-            sudo apt-get update && sudo apt-get install -y aria2 || {
+            apt-get update && apt-get install -y aria2 || {
                 log_error "安装 aria2 失败"
                 return 1
             }
         elif command -v yum >/dev/null 2>&1; then
             # CentOS/RHEL
-            sudo yum install -y aria2 || {
+            yum install -y aria2 || {
                 log_error "安装 aria2 失败"
                 return 1
             }
         elif command -v dnf >/dev/null 2>&1; then
             # Fedora
-            sudo dnf install -y aria2 || {
+            dnf install -y aria2 || {
                 log_error "安装 aria2 失败"
                 return 1
             }
         elif command -v pacman >/dev/null 2>&1; then
             # Arch Linux
-            sudo pacman -S --noconfirm aria2 || {
+            pacman -S --noconfirm aria2 || {
                 log_error "安装 aria2 失败"
                 return 1
             }

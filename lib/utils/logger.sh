@@ -16,6 +16,11 @@ log_success() {
     echo -e "${GREEN}[成功]${NC} $1"
 }
 
+# 记录警告信息
+log_warning() {
+    echo -e "${YELLOW}[警告]${NC} $1"
+}
+
 # 记录信息
 log_info() {
     echo -e "${YELLOW}[信息]${NC} $1"
