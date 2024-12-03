@@ -213,19 +213,10 @@ test_remove_app() {
     log_success "移除应用测试通过"
 }
 
-# python 安装 yaml 函数
-setup_tools() {
-    pip install yaml
-}
-
 # 运行所有测试
 run_all_tests() {
     # 清理环境
-    cleanup
-    
-    # 安装 yaml
-    setup_tools
-    
+    cleanup 
     # 运行测试
     test_create_app
     test_install_app

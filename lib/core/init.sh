@@ -170,13 +170,41 @@ check_root_user() {
 
 # 检查系统依赖
 check_dependencies() {
-    local deps=(curl wget git python3)
-    for dep in "${deps[@]}"; do
-        if ! command -v "$dep" &> /dev/null; then
-            log_error "缺少必需的依赖：$dep"
-            exit 1
-        fi
-    done
+    log_info "检查系统依赖..."
+    
+    # 检查Python环境
+    if ! command -v python3 >/dev/null 2>&1; then
+        log_error "未找到 Python3，请先安装 Python3"
+        return 1
+    fi
+    
+    # 检查pip
+    if ! command -v pip3 >/dev/null 2>&1; then
+        log_error "未找到 pip3，请先安装 pip3"
+        return 1
+    fi
+    
+    # 检查Python依赖
+    local missing_deps=()
+    
+    # 检查PyYAML
+    if ! python3 -c "import yaml" 2>/dev/null; then
+        missing_deps+=("pyyaml")
+    fi
+    
+    # 如果有缺失的依赖，直接安装
+    if [ ${#missing_deps[@]} -gt 0 ]; then
+        log_warning "检测到缺失的Python依赖: ${missing_deps[*]}"
+        for dep in "${missing_deps[@]}"; do
+            log_info "正在安装 $dep..."
+            pip3 install "$dep" || {
+                log_error "安装 $dep 失败"
+                return 1
+            }
+        done
+    fi
+    
+    return 0
 }
 
 # 初始化系统
