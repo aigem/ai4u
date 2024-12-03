@@ -48,8 +48,12 @@ pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https
 # 下载F5-TTS
 log_info "下载F5-TTS..."
 cd $WORKSPACE_DIR
-git clone https://github.com/SWivid/F5-TTS.git
+# 如果目录不存在则克隆，存在则更新
+if [ ! -d "F5-TTS" ]; then
+    git clone https://github.com/SWivid/F5-TTS.git
+fi
 cd F5-TTS
+git pull
 pip install -e .
 log_success "F5-TTS下载并完成依赖安装"
 
