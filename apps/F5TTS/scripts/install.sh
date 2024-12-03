@@ -76,7 +76,7 @@ echo "配置文件: $APP_DIR/config/settings.sh" > "$APP_DIR/使用说明.md"
 echo "虚拟环境名称: $VENV_NAME" >> "$APP_DIR/使用说明.md"
 echo "启动说明: " >> "$APP_DIR/使用说明.md"
 echo "先运行命令启动虚拟环境: conda activate $VENV_NAME" >> "$APP_DIR/使用说明.md"
-echo "再运行命令启动 F5-TTS: $run_cmd" >> "$APP_DIR/使用说明.md"
+echo "再运行命令启动 F5-TTS: export HF_ENDPOINT=https://hf-mirror.com && $run_cmd" >> "$APP_DIR/使用说明.md"
 echo "访问地址: http://<host>:$APP_PORT" >> "$APP_DIR/使用说明.md"
 log_info "使用说明已写入 $APP_DIR/使用说明.md 中，请自行查看"
 log_success "安装完成！"
@@ -84,6 +84,6 @@ log_success "安装完成！"
 # 运行 F5-TTS
 read -p "是否运行 F5-TTS? (y/n): " choice
 if [ "$choice" == "y" ]; then
-    eval $run_cmd
+    export HF_ENDPOINT=https://hf-mirror.com && eval $run_cmd
 fi
 
