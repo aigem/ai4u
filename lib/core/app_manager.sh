@@ -160,7 +160,7 @@ check_installation_prerequisites() {
 # 列出所有可以安装的应用
 list_apps() {
     echo "=============================="
-    echo "  需要安装的AI应用"
+    echo "  可安装的AI应用"
     echo "=============================="
     
     if [ ! -d "$APPS_DIR" ] || [ -z "$(ls -A "$APPS_DIR")" ]; then

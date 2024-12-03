@@ -170,7 +170,7 @@ check_root_user() {
 
 # 检查系统依赖
 check_dependencies() {
-    log_info "检查系统依赖..."
+    echo "检查系统依赖..."
     
     # 检查Python环境
     if ! command -v python3 >/dev/null 2>&1; then

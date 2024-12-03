@@ -8,12 +8,13 @@ app:
 platform:
   name: 良心云
 
-# 应用特定配置
+# 应用特定配置 
 settings:
-  # 在此添加应用特定配置
+  # 虚拟环境名称
   venv_name: ai_f5tts
   # 虚拟环境目录(良心云的默认路径，其他环境请自行修改)
   venv_dir: /root/miniconda3/envs/
+  # python版本
   python_version: 3.11
   # 工作目录: 用于存放下载的Ai应用
   workspace_dir: /workspace
