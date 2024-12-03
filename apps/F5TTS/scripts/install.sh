@@ -30,8 +30,7 @@ else
         conda create -n $VENV_NAME python=$PYTHON_VERSION -y
         log_success "虚拟环境创建成功"
     else
-        log_error "虚拟环境创建失败"
-        exit 1
+        log_info "虚拟环境已存在"
     fi
 fi
 
