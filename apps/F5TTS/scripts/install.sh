@@ -53,6 +53,14 @@ cd F5-TTS
 pip install -e .
 log_success "F5-TTS下载并完成依赖安装"
 
+# 下载模型
+log_info "下载模型..."
+mkdir -p ckpts/F5TTS_Base
+eval $ARIA2_CMD1
+mkdir -p ckpts/E2TTS_Base
+eval $ARIA2_CMD2
+log_success "模型下载完成"
+
 # 运行 F5-TTS 命令
 run_cmd="f5-tts_infer-gradio --port $APP_PORT --host 0.0.0.0"
 log_info "运行 F5-TTS 命令: $run_cmd"
@@ -63,8 +71,9 @@ touch "$APP_DIR/.installed"
 # 将配置中的主要内容及启动命令、虚拟环境名称及如何启动虚拟环境及其它必要信息写入使用说明
 echo "配置文件: $APP_DIR/config/settings.sh" > "$APP_DIR/使用说明.md"
 echo "虚拟环境名称: $VENV_NAME" >> "$APP_DIR/使用说明.md"
-echo "如何启动虚拟环境: conda activate $VENV_NAME" >> "$APP_DIR/使用说明.md"
-echo "启动命令: $run_cmd" >> "$APP_DIR/使用说明.md"
+echo "启动说明: " >> "$APP_DIR/使用说明.md"
+echo "先运行命令启动虚拟环境: conda activate $VENV_NAME" >> "$APP_DIR/使用说明.md"
+echo "再运行命令启动 F5-TTS: $run_cmd" >> "$APP_DIR/使用说明.md"
 echo "访问地址: http://<host>:$APP_PORT" >> "$APP_DIR/使用说明.md"
 log_info "使用说明已写入 $APP_DIR/使用说明.md 中，请自行查看"
 log_success "安装完成！"

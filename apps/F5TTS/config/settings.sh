@@ -19,3 +19,7 @@ PYTHON_VERSION="3.11"
 WORKSPACE_DIR="/workspace"
 # 应用端口
 APP_PORT="7860" 
+
+# aria2 下载命令
+ARIA2_CMD1="aria2c "https://modelscope.cn/models/SWivid/F5-TTS_Emilia-ZH-EN/resolve/master/F5TTS_Base/model_1200000.pt" --dir=. --max-connection-per-server=16 --split=16 --min-split-size=10M --continue=true --max-concurrent-downloads=1 --file-allocation=none --console-log-level=notice --show-console-readout=true --summary-interval=3"
+ARIA2_CMD2="aria2c "https://modelscope.cn/models/SWivid/E2-TTS_Emilia-ZH-EN/resolve/master/E2TTS_Base/model_1200000.pt" --dir=. --max-connection-per-server=16 --split=16 --min-split-size=10M --continue=true --max-concurrent-downloads=1 --file-allocation=none --console-log-level=notice --show-console-readout=true --summary-interval=3"
