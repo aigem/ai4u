@@ -1,0 +1,5 @@
+name: F5TTS
+type: cli
+version: 1.0.0
+description: 一款强大的语音合成工具，在零样本语音合成方面表现出色。
+status: not_installed

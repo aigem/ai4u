@@ -1,0 +1,10 @@
+# F5TTS 应用配置
+app:
+  name: F5TTS
+  type: cli
+  version: 1.0.0
+
+# 应用特定配置
+settings:
+  # 在此添加应用特定配置
+  example_setting: value
