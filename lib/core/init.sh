@@ -184,6 +184,74 @@ check_dependencies() {
         return 1
     fi
     
+    # 检查aria2
+    if ! command -v aria2c >/dev/null 2>&1; then
+        log_warning "未找到 aria2，正在安装..."
+        if command -v apt-get >/dev/null 2>&1; then
+            # Debian/Ubuntu
+            sudo apt-get update && sudo apt-get install -y aria2 || {
+                log_error "安装 aria2 失败"
+                return 1
+            }
+        elif command -v yum >/dev/null 2>&1; then
+            # CentOS/RHEL
+            sudo yum install -y aria2 || {
+                log_error "安装 aria2 失败"
+                return 1
+            }
+        elif command -v dnf >/dev/null 2>&1; then
+            # Fedora
+            sudo dnf install -y aria2 || {
+                log_error "安装 aria2 失败"
+                return 1
+            }
+        elif command -v pacman >/dev/null 2>&1; then
+            # Arch Linux
+            sudo pacman -S --noconfirm aria2 || {
+                log_error "安装 aria2 失败"
+                return 1
+            }
+        else
+            log_error "无法安装 aria2，请手动安装"
+            return 1
+        fi
+
+        # 验证安装是否成功
+        if ! command -v aria2c >/dev/null 2>&1; then
+            log_error "aria2 安装失败"
+            return 1
+        fi
+
+        # 创建配置目录
+        aria2_config_dir="$HOME/.aria2"
+        if [ ! -d "$aria2_config_dir" ]; then
+            mkdir -p "$aria2_config_dir"
+        fi
+
+        # 创建基本配置文件（如果不存在）
+        aria2_config_file="$aria2_config_dir/aria2.conf"
+        if [ ! -f "$aria2_config_file" ]; then
+            cat > "$aria2_config_file" << EOF
+# 基本配置
+continue=true
+max-concurrent-downloads=5
+max-connection-per-server=5
+min-split-size=10M
+split=10
+max-overall-download-limit=0
+max-download-limit=0
+max-overall-upload-limit=0
+max-upload-limit=0
+dir=/workspace/downloads
+EOF
+            log_info "已创建 aria2 配置文件: $aria2_config_file"
+        fi
+    fi
+
+    # 检查 aria2 版本
+    aria2_version=$(aria2c --version | head -n 1 | cut -d' ' -f3)
+    log_info "aria2 版本: $aria2_version"
+    
     # 检查Python依赖
     local missing_deps=()
     

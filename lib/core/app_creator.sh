@@ -218,20 +218,29 @@ requests>=2.28.0
 EOF
     
     # 创建配置模板
-    cat > "$app_dir/config/settings.yaml" << EOF
+    cat > "$app_dir/config/settings.sh" << EOF
+#!/bin/bash
+
 # $app_name 应用配置
-app:
-  name: $app_name
-  type: $app_type
-  version: $version
+APP_NAME="$app_name"
+APP_TYPE="$app_type"
+APP_VERSION="$version"
+
+# 用于哪个平台的安装
+PLATFORM_NAME="良心云"
 
 # 应用特定配置
-settings:
-  # 在此添加应用特定配置
-  venv_name: ai_f5tts
-  # 虚拟环境目录(良心云的默认路径，其他环境请自行修改)
-  venv_dir: /root/miniconda3/envs/
-  python_version: 3.10
+
+# 虚拟环境名称
+VENV_NAME="ai_$APP_NAME"
+# 虚拟环境目录(良心云的默认路径，其他环境请自行修改)
+VENV_DIR="/root/miniconda3/envs/"
+# python版本
+PYTHON_VERSION="3.11"
+# 工作目录: 用于存放下载的Ai应用
+WORKSPACE_DIR="/workspace"
+# 应用端口
+APP_PORT="7860" 
 EOF
     
     # 创建安装脚本
@@ -260,7 +269,7 @@ show_next_steps() {
 
 [下一步操作]
 1. 编辑配置文件：
-   $app_dir/config.yaml
+   $app_dir/config/settings.sh
 
 2. 安装应用：
    ./aitools.sh install $app_name

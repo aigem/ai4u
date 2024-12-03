@@ -10,7 +10,7 @@ PLATFORM_NAME="良心云"
 
 # 应用特定配置
 # 虚拟环境名称
-VENV_NAME="ai_f5tts"
+VENV_NAME="ai_$APP_NAME"
 # 虚拟环境目录(良心云的默认路径，其他环境请自行修改)
 VENV_DIR="/root/miniconda3/envs/"
 # python版本
