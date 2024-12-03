@@ -17,10 +17,3 @@ defaults:
 security:
   verify_checksums: true    # 验证校验和
   enforce_permissions: true  # 强制权限检查
-
-ui:
-  theme: "dark"          # dark/light
-  style: "modern"        # modern/classic
-  animations: true       # 启用/禁用动画
-  color_support: true    # 彩色输出支持
-  auto_install_deps: true # 自动安装缺失的UI组件

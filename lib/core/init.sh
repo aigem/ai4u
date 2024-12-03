@@ -24,7 +24,6 @@ for lib in \
     "$LIB_DIR/utils/yaml_parser.sh" \
     "$LIB_DIR/utils/yaml_utils.sh" \
     "$LIB_DIR/utils/progress.sh" \
-    "$LIB_DIR/utils/system_check.sh" \
     "$LIB_DIR/core/app_manager.sh" \
     "$LIB_DIR/core/app_creator.sh" \
     "$LIB_DIR/core/step_executor.sh" \
@@ -126,12 +125,7 @@ parse_arguments() {
 
 # 显示使用说明
 show_usage() {
-    echo "使用方法: $(basename "$0") [界面选项] <命令> [选项] [应用名称]"
-    echo
-    echo "界面选项:"
-    echo "  --force-ui     强制使用图形界面(TUI)"
-    echo "  --no-ui        使用基础命令行界面"
-    echo "  (默认使用TUI界面，如果不可用则自动切换到命令行界面)"
+    echo "使用方法: $(basename "$0") <命令> [选项] [应用名称]"
     echo
     echo "命令:"
     echo "  create     创建新应用"
@@ -147,53 +141,23 @@ show_usage() {
     echo "  -t, --type TYPE      指定应用类型 (web|cli|service|other)"
     echo
     echo "示例:"
-    echo "  $(basename "$0")                           # 启动TUI界面"
-    echo "  $(basename "$0") --force-ui               # 强制使用TUI界面"
-    echo "  $(basename "$0") create myapp --type web  # 命令行模式创建应用"
-}
-
-# 设置脚本权限
-setup_permissions() {
-    log_info "设置脚本执行权限..."
-    
-    # 主脚本
-    chmod +x "$ROOT_DIR/aitools.sh"
-    
-    # 核心脚本
-    chmod +x "$ROOT_DIR/lib/core/"*.sh
-    
-    # 工具脚本
-    chmod +x "$ROOT_DIR/lib/utils/"*.sh
-    
-    # TUI脚本
-    chmod +x "$ROOT_DIR/lib/tui/"*.sh
-    
-    # 测试脚本
-    chmod +x "$ROOT_DIR/tests/"*.sh
+    echo "  $(basename "$0") create myapp --type web     # 创建Web应用"
+    echo "  $(basename "$0") create --interactive        # 交互式创建应用"
+    echo "  $(basename "$0") install myapp              # 安装应用"
+    echo "  $(basename "$0") test                       # 运行所有测试"
 }
 
 # 初始化系统
 init_system() {
-    # 设置脚本权限
-    setup_permissions
+    # 检查是否为root用户
+    # check_root_user
     
     # 检查系统依赖
     check_dependencies
     
-    # 检查UI组件
-    check_ui_dependencies
-    
-    # 根据配置设置主题
-    if [ "$USE_BASIC_UI" != "true" ]; then
-        source "$ROOT_DIR/lib/tui/theme_manager.sh"
-        local theme=$(yaml_get "$CONFIG_DIR/settings.yaml" "ui.theme")
-        set_theme "${theme:-dark}"
-    fi
-    
     # 创建必需的目录
     mkdir -p "$APPS_DIR"
     mkdir -p "$CONFIG_DIR"
-    mkdir -p "$LOG_DIR"
 }
 
 # 检查是否为root用户
@@ -214,9 +178,6 @@ check_dependencies() {
         fi
     done
 }
-
-# 设置日志目录
-LOG_DIR="$ROOT_DIR/logs"
 
 # 初始化系统
 init_system

@@ -15,11 +15,6 @@ source "$ROOT_DIR/lib/core/app_manager.sh"
 TEST_APP="test_app"
 TEST_APP_DIR="$APPS_DIR/$TEST_APP"
 
-# 设置测试模式
-export TEST_MODE=true
-export USE_BASIC_UI=true
-export COMMAND="test"
-
 # 清理函数
 cleanup() {
     log_info "清理测试环境..."
@@ -35,102 +30,37 @@ handle_error() {
     exit 1
 }
 
-# 测试命令行模式
-test_cli_mode() {
-    log_info "测试命令行模式..."
-    
-    # 确保脚本有执行权限
-    chmod +x "$ROOT_DIR/aitools.sh"
-    
-    # 测试创建应用
-    "$ROOT_DIR/aitools.sh" --test-mode create "$TEST_APP" --type web || handle_error "CLI模式创建应用失败"
-    
-    # 测试安装应用
-    echo "y" | "$ROOT_DIR/aitools.sh" --test-mode install "$TEST_APP" || handle_error "CLI模式安装应用失败"
-    
-    # 测试查看状态
-    "$ROOT_DIR/aitools.sh" --test-mode status "$TEST_APP" || handle_error "CLI模式查看状态失败"
-    
-    # 测试更新应用
-    "$ROOT_DIR/aitools.sh" --test-mode update "$TEST_APP" || handle_error "CLI模式更新应用失败"
-    
-    # 测试列出应用
-    "$ROOT_DIR/aitools.sh" --test-mode list || handle_error "CLI模式列出应用失败"
-    
-    # 测试移除应用（自动确认）
-    echo "y" | "$ROOT_DIR/aitools.sh" --test-mode remove "$TEST_APP" || handle_error "CLI模式移除应用失败"
-    
-    log_success "命令行模式测试通过"
-}
-
 # 测试创建应用
 test_create_app() {
     log_info "测试创建应用..."
     
-    # 测试基本创建
+    # 创建应用（使用非交互模式）
     create_app "$TEST_APP" "web" || handle_error "创建应用失败"
     
-    # 检查基本创建的目录结构
+    # 检查目录结构
     for dir in "scripts" "config" "data" "logs"; do
-        [ -d "$TEST_APP_DIR/$dir" ] || handle_error "基本创建目录不存在：$dir"
+        [ -d "$TEST_APP_DIR/$dir" ] || handle_error "目录不存在：$dir"
     done
     
-    # 检查基本创建的必要文件
+    # 检查必要文件
     for file in "config.yaml" "requirements.txt" "config/settings.yaml.template"; do
-        [ -f "$TEST_APP_DIR/$file" ] || handle_error "基本创建文件不存在：$file"
+        [ -f "$TEST_APP_DIR/$file" ] || handle_error "文件不存在：$file"
     done
     
-    # 检查基本创建的必要脚本
+    # 检查必要脚本
     for script in "install.sh" "uninstall.sh" "update.sh" "status.sh" "test.sh"; do
-        [ -f "$TEST_APP_DIR/scripts/$script" ] || handle_error "基本创建脚本不存在：$script"
-        [ -x "$TEST_APP_DIR/scripts/$script" ] || handle_error "基本创建脚本没有执行权限：$script"
+        [ -f "$TEST_APP_DIR/scripts/$script" ] || handle_error "脚本不存在：$script"
+        [ -x "$TEST_APP_DIR/scripts/$script" ] || handle_error "脚本没有执行权限：$script"
     done
     
-    # 检查基本创建的配置文件内容
+    # 检查配置文件内容
     local name=$(yaml_get "$TEST_APP_DIR/config.yaml" "name")
     local type=$(yaml_get "$TEST_APP_DIR/config.yaml" "type")
     local status=$(yaml_get "$TEST_APP_DIR/config.yaml" "status")
     
-    [ "$name" = "$TEST_APP" ] || handle_error "基本创建配置文件中的应用名称不正确"
-    [ "$type" = "web" ] || handle_error "基本创建配置文件中的应用类型不正确"
-    [ "$status" = "not_installed" ] || handle_error "基本创建配置文件中的应用状态不正确"
-    
-    # 清理基本创建的应用
-    cleanup
-    
-    # 测试交互式创建
-    local INTERACTIVE_APP="test_app_interactive"
-    local INTERACTIVE_APP_DIR="$APPS_DIR/$INTERACTIVE_APP"
-    
-    echo -e "$INTERACTIVE_APP\n1\n1.0.0\n测试描述\n" | create_app_interactive || handle_error "交互式创建应用失败"
-    
-    # 检查交互式创建的目录结构
-    for dir in "scripts" "config" "data" "logs"; do
-        [ -d "$INTERACTIVE_APP_DIR/$dir" ] || handle_error "交互式创建目录不存在：$dir"
-    done
-    
-    # 检查交互式创建的必要文件
-    for file in "config.yaml" "requirements.txt" "config/settings.yaml.template"; do
-        [ -f "$INTERACTIVE_APP_DIR/$file" ] || handle_error "交互式创建文件不存在：$file"
-    done
-    
-    # 检查交互式创建的必要脚本
-    for script in "install.sh" "uninstall.sh" "update.sh" "status.sh" "test.sh"; do
-        [ -f "$INTERACTIVE_APP_DIR/scripts/$script" ] || handle_error "交互式创建脚本不存在：$script"
-        [ -x "$INTERACTIVE_APP_DIR/scripts/$script" ] || handle_error "交互式创建脚本没有执行权限：$script"
-    done
-    
-    # 检查交互式创建的配置文件内容
-    name=$(yaml_get "$INTERACTIVE_APP_DIR/config.yaml" "name")
-    type=$(yaml_get "$INTERACTIVE_APP_DIR/config.yaml" "type")
-    status=$(yaml_get "$INTERACTIVE_APP_DIR/config.yaml" "status")
-    
-    [ "$name" = "$INTERACTIVE_APP" ] || handle_error "交互式创建配置文件中的应用名称不正确"
-    [ "$type" = "web" ] || handle_error "交互式创建配置文件中的应用类型不正确"
-    [ "$status" = "not_installed" ] || handle_error "交互式创建配置文件中的应用状态不正确"
-    
-    # 清理交互式创建的应用
-    rm -rf "$INTERACTIVE_APP_DIR"
+    [ "$name" = "$TEST_APP" ] || handle_error "配置文件中的应用名称不正确"
+    [ "$type" = "web" ] || handle_error "配置文件中的应用类型不正确"
+    [ "$status" = "not_installed" ] || handle_error "配置文件中的应用状态不正确"
     
     log_success "创建应用测试通过"
 }
@@ -139,28 +69,22 @@ test_create_app() {
 test_install_app() {
     log_info "测试安装应用..."
     
-    # 先创建测试应用
-    create_app "$TEST_APP" "web" || handle_error "创建测试应用失败"
-    
-    # 测试安装确认
-    echo "n" | install_app "$TEST_APP" || {
-        cleanup
-        handle_error "安装确认测试失败"
-    }
+    # 检查应用是否已安装
+    if [ -f "$TEST_APP_DIR/.installed" ]; then
+        handle_error "应用已经安装"
+    fi
     
     # 安装应用
-    echo "y" | install_app "$TEST_APP" || {
-        cleanup
-        handle_error "安装应用失败"
-    }
+    echo "y" | install_app "$TEST_APP" || handle_error "安装应用失败"
     
     # 检查安装标记
-    [ -f "$TEST_APP_DIR/.installed" ] || {
-        cleanup
-        handle_error "安装标记不存在"
-    }
+    [ -f "$TEST_APP_DIR/.installed" ] || handle_error "安装标记不存在"
     
-    return 0
+    # 检查配置文件状态
+    local status=$(yaml_get "$TEST_APP_DIR/config.yaml" "status")
+    [ "$status" = "installed" ] || handle_error "安装后应用状态不正确"
+    
+    log_success "安装应用测试通过"
 }
 
 # 测试应用状态
@@ -227,19 +151,14 @@ test_interactive_create() {
     [ -d "$interactive_app_dir" ] && rm -rf "$interactive_app_dir"
     
     # 模拟用户输入
-    (
+    {
         echo "$interactive_app"  # 应用名称
-        sleep 0.1               # 添加短暂延迟确保输入顺序正确
-        echo "1"                # 选择 web 类型 (1 对应 web)
-        sleep 0.1               # 添加短暂延迟
+        echo "1"                # 选择 web 类型
         echo "1.0.0"           # 版本号
-        sleep 0.1               # 添加短暂延迟
         echo "测试应用"         # 应用描述
-    ) | create_app_interactive || {
-        # 确保在失败时也清理
-        [ -d "$interactive_app_dir" ] && rm -rf "$interactive_app_dir"
-        handle_error "交互式创建应用失败"
-    }
+        echo "n"               # 不需要特定系统包
+        echo "n"               # 不需要环境变量
+    } | create_app_interactive || handle_error "交互式创建应用失败"
     
     # 检查应用是否创建成功
     [ -d "$interactive_app_dir" ] || handle_error "交互式创建的应用目录不存在"
@@ -294,84 +213,26 @@ test_remove_app() {
     log_success "移除应用测试通过"
 }
 
-# 修改UI测试以适应测试模式
-test_ui_components() {
-    log_info "测试UI组件..."
-    
-    # 在测试模式下跳过UI测试
-    if [ "$TEST_MODE" = "true" ]; then
-        log_info "测试模式：跳过UI组件测试"
-        return 0
-    fi
-    
-    # 原有的UI测试代码保持不变
-    test_main_window
-    test_progress_display
-    test_theme_switching
-}
-
-# 修改UI依赖检查测试
-test_ui_dependencies() {
-    log_info "测试UI依赖检查..."
-    
-    # 在测试模式下使用简化的UI依赖检查
-    if [ "$TEST_MODE" = "true" ]; then
-        log_info "测试模式：使用基础UI"
-        return 0
-    fi
-    
-    # 原有的UI依赖检查代码保持不变
-    check_ui_dependencies || handle_error "UI依赖检查失败"
-    if [ "$USE_BASIC_UI" != "true" ]; then
-        whiptail --version >/dev/null 2>&1 || handle_error "whiptail不可用"
-    fi
-    
-    log_success "UI依赖检查测试通过"
-}
-
 # 运行所有测试
 run_all_tests() {
     # 清理环境
     cleanup
     
-    # 按照依赖顺序运行测试
-    test_create_app || return 1
-    test_install_app || return 1
-    test_app_status || return 1
-    test_update_app || return 1
-    test_list_apps || return 1
-    test_interactive_create || return 1
-    test_reinstall_app || return 1
-    test_remove_app || return 1
-    
-    # UI相关测试
-    test_ui_components || return 1
-    test_ui_dependencies || return 1
+    # 运行测试
+    test_create_app
+    test_install_app
+    test_app_status
+    test_update_app
+    test_list_apps
+    test_interactive_create
+    test_reinstall_app
+    test_remove_app
     
     # 最后清理
     cleanup
     
     log_success "所有测试通过！"
-    return 0
 }
 
 # 执行测试
-if [ -n "$BASH_SOURCE" ] && [ "$BASH_SOURCE" = "$0" ]; then
-    # 直接运行测试脚本时
-    run_all_tests
-else
-    # 通过 aitools.sh test 运行时
-    if [ "$COMMAND" = "test" ]; then
-        run_all_tests
-    fi
-fi
-
-test_config_files() {
-    log_info "测试配置文件..."
-    
-    # 测试全局配置
-    [ -f "$CONFIG_DIR/settings.yaml" ] || handle_error "全局配置文件不存在"
-    
-    # 测试应用配置
-    [ -f "$TEST_APP_DIR/config/settings.yaml.template" ] || handle_error "应用配置模板不存在"
-}
+run_all_tests

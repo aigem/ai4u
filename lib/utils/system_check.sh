@@ -22,11 +22,6 @@ check_system_requirements() {
         return 1
     fi
 
-    # 检查UI依赖
-    if ! check_ui_dependencies; then
-        return 1
-    fi
-
     return 0
 }
 
@@ -120,47 +115,5 @@ check_system_resources() {
         return 1
     fi
 
-    return 0
-}
-
-# 检查UI依赖
-check_ui_dependencies() {
-    local missing_deps=()
-    
-    # 检查whiptail
-    if ! command -v whiptail >/dev/null 2>&1; then
-        missing_deps+=("whiptail")
-        log_info "检测到缺少UI组件: whiptail"
-        
-        # 询问是否安装
-        read -p "是否安装whiptail？(y/n) " install_choice
-        if [[ $install_choice =~ ^[Yy]$ ]]; then
-            log_info "正在安装whiptail..."
-            if [ -f /etc/debian_version ]; then
-                sudo apt-get update && sudo apt-get install -y whiptail
-            elif [ -f /etc/redhat-release ]; then
-                sudo yum install -y newt  # whiptail在RHEL系统中的包名是newt
-            else
-                log_error "不支持的系统类型，请手动安装whiptail"
-                export USE_BASIC_UI=true
-                return 1
-            fi
-            
-            # 检查安装是否成功
-            if command -v whiptail >/dev/null 2>&1; then
-                log_success "whiptail 安装成功"
-                return 0
-            else
-                log_error "whiptail 安装失败"
-                export USE_BASIC_UI=true
-                return 1
-            fi
-        else
-            log_warn "用户取消安装whiptail，将使用基础命令行界面"
-            export USE_BASIC_UI=true
-            return 0
-        fi
-    fi
-    
     return 0
 }
