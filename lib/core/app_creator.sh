@@ -51,6 +51,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$(dirname "$SCRIPT_DIR")"
 ROOT_DIR="$(dirname "$(dirname "$APP_DIR")")"
 
+# 加载应用配置
+if [ -f "$APP_DIR/config/settings.yaml" ]; then
+    source "$APP_DIR/config/settings.yaml"
+fi
+
 # 加载工具函数
 source "$ROOT_DIR/lib/utils/logger.sh"
 
@@ -213,7 +218,7 @@ requests>=2.28.0
 EOF
     
     # 创建配置模板
-    cat > "$app_dir/config/settings.yaml.template" << EOF
+    cat > "$app_dir/config/settings.yaml" << EOF
 # $app_name 应用配置
 app:
   name: $app_name
@@ -223,7 +228,10 @@ app:
 # 应用特定配置
 settings:
   # 在此添加应用特定配置
-  example_setting: value
+  venv_name: ai_f5tts
+  # 虚拟环境目录(良心云的默认路径，其他环境请自行修改)
+  venv_dir: /root/miniconda3/envs/
+  python_version: 3.10
 EOF
     
     # 创建安装脚本

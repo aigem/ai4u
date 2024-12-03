@@ -157,15 +157,14 @@ check_installation_prerequisites() {
     return 0
 }
 
-# 列出所有已安装的应用
+# 列出所有可以安装的应用
 list_apps() {
     echo "=============================="
-    echo "  已安装的AI应用"
+    echo "  需要安装的AI应用"
     echo "=============================="
     
     if [ ! -d "$APPS_DIR" ] || [ -z "$(ls -A "$APPS_DIR")" ]; then
-        echo "当前没有已安装的应用"
-        echo "使用 'create' 命令创建新应用"
+        echo "当前没有可以安装的应用"
         return 0
     fi
 
