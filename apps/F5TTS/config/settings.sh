@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # F5TTS 应用配置
-APP_NAME="F5TTS"
+APP_NAME="f5tts"
 APP_TYPE="cli"
 APP_VERSION="1.0.0"
 

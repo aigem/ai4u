@@ -16,7 +16,7 @@ log_info "加载应用配置成功"
 echo "本脚本仅支持在 $PLATFORM_NAME 平台运行"
 echo "请先自行修改配置文件 $APP_DIR/config/settings.sh"
 
-read -p "按任意键继续..."
+read -p "按回车键继续..."
 
 # 创建虚拟环境,如果已经存在则询问是否覆盖
 if [ ! -d "$VENV_DIR/$VENV_NAME" ]; then
