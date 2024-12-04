@@ -18,8 +18,11 @@ fi
 git clone https://github.com/aigem/ai4u.git
 # git clone https://gitee.com/fuliai/ai4u.git
 
-# 复制 scripts 目录及以下所有文件到 ai4u/apps/F5TTS 目录下(包括scripts目录)
-cp -r scripts/* ai4u/apps/$project_name/
+# 复制 scripts 目录及以下所有文件到 ai4u/apps/F5TTS
+if [ ! -d "ai4u/apps/$project_name/scripts" ]; then
+    mkdir -p ai4u/apps/$project_name/scripts
+fi
+cp -r scripts/* ai4u/apps/$project_name/scripts/
 cd ai4u
 
 # 检查ai4u/apps/F5TTS目录下是否存在install.sh文件，如果不存在则退出
