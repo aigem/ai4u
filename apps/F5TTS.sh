@@ -72,4 +72,3 @@ chmod +x ai4u/aitools.sh
 cd ai4u
 echo "开始安装 $project_name..."
 bash aitools.sh install $project_name
-
