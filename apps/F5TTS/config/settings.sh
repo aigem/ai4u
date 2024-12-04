@@ -51,7 +51,7 @@ MODELSCOPE_CMD="modelscope download --model AI-ModelScope/whisper-large-v3-turbo
 
 
 # 测试语音生成命令：
-只需在命令行中输入以下命令即可生成语音
+# 只需在命令行中输入以下命令即可生成语音
 
 ```bash
 f5-tts_infer-cli \
