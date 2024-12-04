@@ -38,11 +38,13 @@ else
     echo "ai4u 仓库已存在，正在更新..."
     cd ai4u
     git pull
+    cd ..
 fi
 
 # 创建必要的目录
 echo "创建必要的目录..."
 mkdir -p ai4u/apps/$project_name/scripts
+mkdir -p ai4u/apps/$project_name/config
 
 # 复制脚本文件
 if [ -d "scripts" ]; then
