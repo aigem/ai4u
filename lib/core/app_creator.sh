@@ -115,12 +115,22 @@ echo "启动说明: " >> "$WORKSPACE_DIR/$APP_NAME使用说明.md"
 echo "先运行命令启动虚拟环境: conda activate $VENV_NAME" >> "$WORKSPACE_DIR/$APP_NAME使用说明.md"
 echo "再运行命令启动 $APP_NAME: export HF_ENDPOINT=https://hf-mirror.com && $run_cmd" >> "$WORKSPACE_DIR/$APP_NAME使用说明.md"
 echo "访问地址: http://<host>:$APP_PORT" >> "$WORKSPACE_DIR/$APP_NAME使用说明.md"
+echo "需要你自行使用内网穿透工具将 $APP_PORT 端口映射到公网" >> "$WORKSPACE_DIR/$APP_NAME使用说明.md"
+echo "以便查看并使用 $APP_NAME 服务。可以新建命令行终端来运行以下命令进行测试:" >> "$WORKSPACE_DIR/$APP_NAME使用说明.md"
+echo "ssh -p 443 -R0:127.0.0.1:${APP_PORT} a.pinggy.io" >> "$WORKSPACE_DIR/$APP_NAME使用说明.md"
+echo "需要更好的内网穿透工具及教程请查看 https://space.bilibili.com/3493076850968674" >> "$WORKSPACE_DIR/$APP_NAME使用说明.md"
+echo "=============================="
 log_info "详细使用说明查看 $WORKSPACE_DIR/$APP_NAME使用说明.md 中，请自行查看"
-log_success "安装完成！"
+log_success "$APP_NAME 安装完成！"
+echo "=============================="
 
 # 运行应用
 read -p "是否现在运行 $APP_NAME? (y/n): " choice
+echo "=============================="
 if [ "$choice" == "y" ]; then
+    log_warning "需要你自行使用内网穿透工具将 $APP_PORT 端口映射到公网"
+    log_info "以便查看并使用 $APP_NAME 服务。可以新建命令行终端来运行以下命令进行测试:"
+    log_info "ssh -p 443 -R0:127.0.0.1:${APP_PORT} a.pinggy.io"
     export HF_ENDPOINT=https://hf-mirror.com && eval $run_cmd
 fi
 EOF

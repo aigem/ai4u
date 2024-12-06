@@ -1,0 +1,5 @@
+name: openWebUI
+type: cli
+version: 1.0.0
+description: Open WebUI 是一个功能强大且用户友好的自托管Web界面，专为大型语言模型（LLM）设计
+status: not_installed
