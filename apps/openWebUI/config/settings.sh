@@ -21,4 +21,4 @@ WORKSPACE_DIR="/workspace"
 # 应用端口
 APP_PORT="7860"
 # 启动命令-请自行修改,必填项
-run_cmd="PORT=$APP_PORT open-webui serve"
+run_cmd="open-webui serve --port $APP_PORT"
