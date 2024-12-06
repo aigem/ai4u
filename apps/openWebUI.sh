@@ -27,7 +27,7 @@ fi
 # 克隆仓库(https://github.com/aigem/ai4u)
 if [ ! -d "ai4u" ]; then
     echo "正在克隆 ai4u 仓库..."
-    git clone https://openi.pcl.ac.cn/niubi/ai4u.git
+    git clone https://gitee.com/fuliai/ai4u.git
 else
     echo "ai4u 仓库已存在，正在更新..."
     cd ai4u
