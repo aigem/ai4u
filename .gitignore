@@ -25,7 +25,6 @@ logs/
 *.pid.lock
 
 # Application specific
-apps/*/data/
 apps/*/logs/
 apps/*/temp/
 apps/*/cache/

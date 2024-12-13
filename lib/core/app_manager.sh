@@ -25,6 +25,7 @@ install_app() {
     if [ -f "$app_dir/.installed" ]; then
         log_error "应用 $app_name 已经安装"
         # 询问是否重新安装，如果选择否则返回,否则继续
+        echo "如果需要更新安装，请选择 y 即可"
         read -p "确定要重新安装吗?(y/n) " confirm
         if [[ $confirm != "y" ]]; then
             log_info "取消重新安装"
