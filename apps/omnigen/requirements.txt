@@ -1,3 +1,5 @@
 # Python dependencies
 PyYAML>=6.0
 requests>=2.28.0
+gradio
+spaces
