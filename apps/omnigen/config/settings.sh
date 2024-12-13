@@ -22,3 +22,6 @@ WORKSPACE_DIR="/workspace"
 APP_PORT="7860"
 # 启动命令-请自行修改,必填项
 run_cmd="export HF_ENDPOINT=https://hf-mirror.com && export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True && python /workspace/OmniGen_VectorSpaceLab/app.py"
+
+# ngrok配置。请到 https://dashboard.ngrok.com/get-started/setup/linux 获取authtoken
+NGROK_AUTH_TOKEN=""
