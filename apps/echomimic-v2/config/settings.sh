@@ -24,4 +24,4 @@ APP_PORT="7860"
 run_cmd="cd /workspace/echomimic_v2 && python app.py"
 
 # 应用git地址
-APP_GIT_URL="https://github.com/antgroup/echomimic_v2.git"
+APP_GIT_URL="https://openi.pcl.ac.cn/aipc/echomimic_v2.git"
