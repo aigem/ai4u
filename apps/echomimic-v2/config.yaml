@@ -1,0 +1,5 @@
+name: echomimic-v2
+type: cli
+version: 1.0.0
+description: 通过1张图片及 1段语音生成高质量数字人视频
+status: not_installed

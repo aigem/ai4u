@@ -61,10 +61,10 @@ fi
 source "$ROOT_DIR/lib/utils/logger.sh"
 
 # 开始安装
-log_info "开始安装应用..."
+log_info "开始安装【$APP_NAME】..."
 
 # 提示先自行修改配置
-echo "本脚本仅支持在 $PLATFORM_NAME 平台运行"
+echo "本脚本仅支持在 【$PLATFORM_NAME】 平台运行"
 echo "请先自行修改配置文件 $APP_DIR/config/settings.sh"
 
 # read -p "按回车键继续..."
@@ -72,14 +72,14 @@ echo "请先自行修改配置文件 $APP_DIR/config/settings.sh"
 # 创建虚拟环境
 if [ ! -d "$VENV_DIR/$VENV_NAME" ]; then
     log_info "创建虚拟环境..."
-    conda create -n $VENV_NAME python=$PYTHON_VERSION ffmpeg -y
+    conda create -n $VENV_NAME python=$PYTHON_VERSION pip ffmpeg -y
     log_success "虚拟环境创建成功"
 else
     log_info "虚拟环境已存在，是否覆盖？(y/n)"
     read -p "请输入选项: " choice
     if [ "$choice" == "y" ]; then
         rm -rf "$VENV_DIR/$VENV_NAME"
-        conda create -n $VENV_NAME python=$PYTHON_VERSION ffmpeg -y
+        conda create -n $VENV_NAME python=$PYTHON_VERSION pip ffmpeg -y
         log_success "虚拟环境创建成功"
     else
         log_info "虚拟环境已存在"
