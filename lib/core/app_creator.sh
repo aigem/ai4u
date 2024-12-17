@@ -229,26 +229,27 @@ create_install_entry() {
     local app_dir="$1"
     local app_name=$(basename "$app_dir")
     local install_entry="$app_dir/$app_name.sh"
+    local current_date=$(date +%Y-%m-%d)
 
-    cat > "$install_entry" << 'EOF'
+    cat > "$install_entry" << EOF
 #!/bin/bash
 
 # 设置项目名称
-project_name="$app_name"
+project_name="${app_name}"
 video_url="https://www.bilibili.com/video/BV1mCkEYyEcy/"
 
 # 脚本信息
 echo "================================================"
-echo "描述: $project_name 主程序，用于管理 $project_name 的安装和配置"
+echo "描述: ${app_name} 主程序，用于管理 ${app_name} 的安装和配置"
 echo "作者: ai来事"
-echo "创建日期: $(date +%Y-%m-%d)"
-echo "参考视频介绍: $video_url"
+echo "创建日期: ${current_date}"
+echo "参考视频介绍: \$video_url"
 echo "================================================"
 
 # 检查是否在 /workspace 目录下
-if [ "$(pwd)" != "/workspace" ]; then
+if [ "\$(pwd)" != "/workspace" ]; then
     echo "请在 /workspace 目录下运行此脚本"
-    echo "参考视频教程: $video_url"
+    echo "参考视频教程: \$video_url"
     exit 1
 fi
 
@@ -258,7 +259,7 @@ if ! command -v git &> /dev/null; then
     exit 1
 fi
 
-# 克隆仓库(https://github.com/aigem/ai4u)
+# 克隆仓库
 if [ ! -d "ai4u" ]; then
     echo "正在克隆 ai4u 仓库..."
     git clone https://gitee.com/fuliai/ai4u.git
@@ -271,31 +272,31 @@ fi
 
 # 创建必要的目录
 echo "创建必要的目录..."
-mkdir -p ai4u/apps/$project_name/scripts
+mkdir -p ai4u/apps/${app_name}/scripts
 
 # 复制脚本文件
 if [ -d "scripts" ]; then
     echo "复制安装脚本..."
-    cp -r scripts/* ai4u/apps/$project_name/scripts/
+    cp -r scripts/* ai4u/apps/${app_name}/scripts/
 else
     echo "错误：scripts 目录不存在"
     echo "请确保已获取正确的安装脚本并解压到 /workspace 目录下"
     echo "================================================"
     echo "获取链接: https://gf.bilibili.com/item/detail/1107198073"
     echo ""
-    echo "先看视频教程：$video_url"
+    echo "先看视频教程：\$video_url"
     echo "================================================"
     exit 1
 fi
 
 # 检查必要文件是否存在
-if [ ! -f "ai4u/apps/$project_name/scripts/install.sh" ]; then
+if [ ! -f "ai4u/apps/${app_name}/scripts/install.sh" ]; then
     echo "错误：install.sh 文件不存在"
     echo "请确保已获取正确的安装脚本并解压到 /workspace 目录下"
     echo "================================================"
     echo "获取链接: https://gf.bilibili.com/item/detail/1107198073"
     echo ""
-    echo "先看视频教程：$video_url"
+    echo "先看视频教程：\$video_url"
     echo "================================================"
     exit 1
 fi
@@ -305,8 +306,8 @@ chmod +x ai4u/aitools.sh
 
 # 进入 ai4u 目录并运行安装
 cd ai4u
-echo "开始安装 $project_name..."
-bash aitools.sh install $project_name
+echo "开始安装 ${app_name}..."
+bash aitools.sh install ${app_name}
 EOF
 
     chmod +x "$install_entry"
