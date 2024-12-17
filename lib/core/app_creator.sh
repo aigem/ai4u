@@ -227,8 +227,7 @@ EOF
 # 创建应用安装入口文件
 create_install_entry() {
     local app_dir="$1"
-    local app_name="$1"
-    local install_entry="$app_dir/$app_name.sh"
+    local install_entry="$app_dir/$app_dir.sh"
 
     cat > "$install_entry" << 'EOF'
 #!/bin/bash
@@ -240,7 +239,6 @@ EOF
 
     chmod +x "$test_script"
 }
-
 
 # 创建应用目录结构
 create_app_structure() {

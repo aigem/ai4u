@@ -1,5 +1,5 @@
 name: omnigen
 type: cli
-version: 1.0.0
+version: 1.1.0
 description: OmniGen是一种强大的图像生成模型，可以通过简单的指令将文本转化为图像，并支持多种图像编辑和生成任务。
 status: not_installed
