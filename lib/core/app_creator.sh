@@ -60,6 +60,21 @@ fi
 # 加载工具函数
 source "$ROOT_DIR/lib/utils/logger.sh"
 
+# 初始化conda
+# >>> conda initialize >>>
+__conda_setup="$('/root/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/root/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/root/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/root/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
 # 开始安装
 log_info "开始安装【$APP_NAME】..."
 
@@ -78,6 +93,7 @@ else
     log_info "虚拟环境已存在，是否覆盖？(y/n)"
     read -p "请输入选项: " choice
     if [ "$choice" == "y" ]; then
+        conda deactivate 2>/dev/null || true
         rm -rf "$VENV_DIR/$VENV_NAME"
         conda create -n $VENV_NAME python=$PYTHON_VERSION pip ffmpeg -y
         log_success "虚拟环境创建成功"
@@ -86,10 +102,13 @@ else
     fi
 fi
 
-# 激活虚拟环境，如果已经激活则继续运行脚本
-if ! conda activate $VENV_NAME; then
-    log_info "虚拟环境已激活,当前环境为: $VENV_NAME"
-fi
+# 激活虚拟环境
+log_info "正在激活虚拟环境 $VENV_NAME ..."
+conda activate $VENV_NAME || {
+    log_error "虚拟环境激活失败"
+    exit 1
+}
+log_success "虚拟环境已激活: $(conda info --envs | grep '*' || echo '未激活')"
 
 # 示例：创建必要的目录
 log_info "创建必要的目录..."
