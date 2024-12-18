@@ -21,7 +21,7 @@ WORKSPACE_DIR="/workspace"
 # 应用端口
 APP_PORT="7860"
 # 启动命令-请自行修改,必填项
-run_cmd="cd /workspace/echomimic_v2 && python app.py"
+run_cmd="cd /workspace/echomimic-v2 && python app.py"
 
 # 应用git地址
 APP_GIT_URL="https://openi.pcl.ac.cn/aipc/echomimic_v2.git"
